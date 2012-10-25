@@ -3,7 +3,7 @@
 #################
 
 *.pydevproject
-.project
+#.project
 .metadata
 bin/
 tmp/
@@ -12,7 +12,7 @@ tmp/
 *.swp
 *~.nib
 local.properties
-.classpath
+#.classpath
 .settings/
 .loadpath
 
@@ -168,6 +168,6 @@ pip-log.txt
 *.class
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.ear
