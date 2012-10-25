@@ -4,10 +4,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import agent.StorageAgent.Product;
-
-
-
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -23,10 +19,10 @@ import jade.lang.acl.MessageTemplate;
 public class RobotAgent extends Agent {
 	public Point location;//current location of robot
 	public boolean isAllowedToMove;//needed to perform movement
+	public boolean isMovingTowardsStorage;//true if moving to storage, false if returning an item.
 	public Point destination;
 	private AID[] storageAgents;// list of active storage agents
 	private AID[] guiAgents;//list of active guiAgents 
-	private AID targetStorage;//storageAgent the robot is currently moving towards to
 	public List<Point> travelPoints = new ArrayList<Point>();//in this list is an ordered array of points where the robot is going
 	public Integer currentPathCost; //amount of spaces robot needs to move before it s idle again
 	boolean allowedToLeaveStorageAgent;
@@ -81,6 +77,7 @@ public class RobotAgent extends Agent {
 	*/
 	protected void setup() {
 		isAllowedToMove=false;
+		isMovingTowardsStorage=true;
 		currentPathCost=0;
 		allowedToLeaveStorageAgent=true;
 		updateGuiAgents();//Robot agent wont start without an active GuiAgent
@@ -196,11 +193,7 @@ public class RobotAgent extends Agent {
 				System.out.println(getAID().getName() +" will pick up the item at "+ itemX + ","+itemY +" and bring it to start of input queue at: " + (inputQueueX-11) + "," +inputQueueY);
 				myAgent.send(reply);
 				currentPathCost=calculatePathCost(new Point(itemX,itemY));
-				if(targetStorage==null)
-				{
-					targetStorage=msg.getSender();
-				}
-				//TODO : set targetStorage to the sender of the ACCEPT_PROPOSAL if targetStorage
+				
 				travelPoints.add(new Point(itemX,itemY));
 			}
 			else {
@@ -216,10 +209,13 @@ public class RobotAgent extends Agent {
 
 		@Override
 		protected void onTick() {//every 1000 ms
-			if(isAllowedToMove)
+			if(isAllowedToMove  && allowedToLeaveStorageAgent)
 			{//the robot claims spots with 3 in one time
 				//TODO : make the robot move on his local map to the next location and edit the variable location, it wont collide with any other robot for the spot is claimed. 
 			
+				/*
+				 * Different things need to be taken in consideration. The robot may move to return an item, or to deliver an item
+				 */
 				ACLMessage mapUpd = new ACLMessage(ACLMessage.INFORM);
 				mapUpd.addReceiver(guiAgents[0]);//The gui agent needs to know that the robot actually did a move
 				mapUpd.setContent("x,y");//x,y is for the GUI agent, it has to visualize movement
@@ -227,10 +223,14 @@ public class RobotAgent extends Agent {
 				myAgent.send(mapUpd); 
 				currentPathCost--;
 				//TODO : if the robot has moved to the last spot of the 3 claimed spots, isAllowedToMove has to be put to false. The robot has to claim 3 new spots
-				
+				if(1==0)//if robot reached a destionation
+				{
+					addBehaviour(new RobotAtDestionationBehaviour());//Tell the storage agent we arrived
+					//TODO : remove the current destination point where the robot is now at, from the travelPoints
+				}
 			}
-			if(0!=currentPathCost&&false==isAllowedToMove&&true==allowedToLeaveStorageAgent)//robot has to make movement claim request
-			{// TODO : calculate the next three spots the robot wants to move to, to claim it at a storage agent. if the robot is able to claim a spot next to the storage agent, allowedToLeaveStorageAgent must be set to false
+			if(0!=currentPathCost&&false==isAllowedToMove&& allowedToLeaveStorageAgent)//robot has to make movement claim request
+			{// TODO : calculate the next three spots the robot wants to move to (towards first point in "travelPoints", to claim it at a storage agent. if the robot is able to claim a spot next to the storage agent, allowedToLeaveStorageAgent must be set to false
 				//the agent will want to move to the entrance if input queue(See our map), which is 11 values left of the storage agent
 				//if the agent arrives at the storage queue it wants to move towards the storage agent
 				updateStorageAgents();
@@ -249,14 +249,13 @@ public class RobotAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {//this agent received a YES or NO after his movement request
 				String response = msg.getContent();
-				//System.out.println("received movement feedback");//debugging purpose
 				if(response.contains("yes"))
 				{
 					isAllowedToMove=true;
 				}
 				else
 				{
-					//TODO : find a new path
+					//TODO : find a new path and new currentPathCost
 					
 				}
 			}
@@ -266,11 +265,32 @@ public class RobotAgent extends Agent {
 		}
 	}
 	
-	private class RobotAtStorage extends Behaviour {//one shot
-		public void action() {//inform the current target storage that the robot arrived
+	private class awaitAllowanceToLeaveStorage extends CyclicBehaviour {
+		public void action() {
+			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),MessageTemplate.MatchConversationId("item-return"));
+			ACLMessage msg = myAgent.receive(mt);
+			if (msg != null) {//this agent received coords where to put the item back
+				String response = msg.getContent();
+				//TODO: Get the x,y coords from message and put this point first in his the list ot travelPoints
+				isAllowedToMove=true;
+			}
+			else {
+				block();
+			}
+		}
+	}
+	
+	private class RobotAtDestionationBehaviour extends Behaviour {//one shot
+		public void action() {//inform all storage agents that im near one of them
+			allowedToLeaveStorageAgent=false;
 			ACLMessage atStorage = new ACLMessage(ACLMessage.INFORM);
 			atStorage.setConversationId("item-arrived");
-			atStorage.addReceiver(targetStorage);
+			atStorage.setContent(location.x+","+location.y);
+			updateStorageAgents();
+			for (int i = 0; i < storageAgents.length; ++i) {
+				atStorage.addReceiver(storageAgents[i]);
+			} 
+			
 			myAgent.send(atStorage);
 			done();
 		}
@@ -290,6 +310,12 @@ public class RobotAgent extends Agent {
 			mapReq.setContent("Give me map");
 			mapReq.setConversationId("map-request");
 			myAgent.send(mapReq);
+			
+			ACLMessage mapUpd = new ACLMessage(ACLMessage.INFORM);
+			mapUpd.addReceiver(guiAgents[0]);//The gui agent needs to know that the robot actually did a move
+			mapUpd.setContent(location.x+","+location.y);//put the agent on the map
+			mapUpd.setConversationId("map-update");
+			myAgent.send(mapUpd); 
 			done();
 		}
 		@Override
