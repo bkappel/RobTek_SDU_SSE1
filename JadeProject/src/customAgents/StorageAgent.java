@@ -20,24 +20,35 @@ License along with this library; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA  02111-1307, USA.
  *****************************************************************/
-
-package agent;
+package customAgents;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import java.awt.Point;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class StorageAgent extends Agent {
+	public class PathClaimer 
+	{
+		public List<Point> claimedPoints = new ArrayList<Point>();
+		public AID ID;
+		public PathClaimer(AID a)
+		{
+			ID=a;
+		}
+	}
+	
 	public class Product
 	{
 		Point location;
@@ -51,6 +62,7 @@ public class StorageAgent extends Agent {
 	}
 	public List<Product> products = new ArrayList<Product>();
 	public List<String> pendingRequests = new ArrayList<String>();
+	public List<PathClaimer> PathClaimers = new ArrayList<PathClaimer>();
 	String requestedItem;
 	Point requestedCoord;
 	Point location;
@@ -75,7 +87,7 @@ public class StorageAgent extends Agent {
 			doDelete();
 		}
 		
-		// Create the catalogue
+		// Create the product list
 		//TODO : think of different products and fill our warehouse, see our warehouse map file
 		addProduct("Chair",new Point(4,4));
 		addProduct("Table",new Point(9,11));
@@ -101,9 +113,9 @@ public class StorageAgent extends Agent {
 		// Create and show the GUI 
 		myGui = new StorageAgentGUI(this);
 		myGui.showGui();
-		addBehaviour(new AcceptMovRequest());//respond to incoming movRequests from RobotAgents
+		addBehaviour(new AcceptHopRequest());//respond to incoming movRequests from RobotAgents
 		addBehaviour(new CheckClaimedMov());//respond to incoming movRequests from RobotAgents
-		
+		addBehaviour(new CheckArrivalInforms());//respond to incoming arrival informs from Robotagents
 	}
 
 	/**
@@ -148,7 +160,6 @@ public class StorageAgent extends Agent {
 				System.out.println(storageAgents[i].getName());
 			}
 		} catch (FIPAException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("in the catch");
 		} 
@@ -172,7 +183,6 @@ public class StorageAgent extends Agent {
 				System.out.println(robotAgents[i].getName());
 			}
 		} catch (FIPAException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("in the catch");
 		} 
@@ -279,7 +289,6 @@ public class StorageAgent extends Agent {
 					if (reply.getPerformative() == ACLMessage.INFORM) {
 						System.out.println(getAID().getName() + ": Conversation succesfully ended");
 						pendingRequests.add(reply.getSender() + "," + requestedItem);
-						//TODO: Store that this agent will pick up item X
 					}
 					else {
 						System.out.println("Conversation failed for unknown reason");
@@ -302,14 +311,29 @@ public class StorageAgent extends Agent {
 		}
 	}  // End of inner class RequestPerformer
 	
-	private class AcceptMovRequest extends CyclicBehaviour {
+	private class AcceptHopRequest extends CyclicBehaviour {
 		public void action() {//A robot agent is trying to claim a path of 3 squares
-			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("mov-request"), MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF));
+			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("hop-request"), MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF));
 			ACLMessage movReq = myAgent.receive(mt);
 			if (movReq != null) {//there is a pending movement request from 1 or more robotAgent
-				String requestedLocation = movReq.getContent();// the movement string looks like x,y;x,y;x,y The agent requests for these spots to be available
-				//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else the robot wouldnt send another request
-				//TODO : Check if the requested locations are available, a map is needed for that
+				String requestedLocations = movReq.getContent();// the movement string looks like x,y;x,y;x,y The agent requests for these spots to be available
+				
+				boolean requestIsAvailable=false;
+				//TODO : Check if the requested locations are available
+				
+				if(requestIsAvailable==true)
+				{
+					AID AIDtoCheck = movReq.getSender();
+					boolean exists = false;
+					for(int i=0;i<PathClaimers.size();i++)
+					{
+						if(PathClaimers.get(i).ID==AIDtoCheck)
+						{
+							exists=true;
+						}
+					}
+					//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else the robot wouldnt send another request
+				}
 				
 				ACLMessage acptMov = movReq.createReply();//the robotAgent sender is added as recipient
 				updateStorageAgents();
@@ -329,36 +353,47 @@ public class StorageAgent extends Agent {
 	
 	private class CheckClaimedMov extends CyclicBehaviour {
 		public void action() {//storage agents should listen to other storage agents claiming spots for robotAgents
-			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("mov-request"), MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("hop-request"), MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 			ACLMessage movReq = myAgent.receive(mt);
-			if (movReq != null) {//a storage agent claimed areas of the map
-				//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else it wouldnt send another request
-				//TODO : store that these areas are now occupied
-				//TODO : Store that this is the agent who claimed the spots, if this agent does another claim request, we know the claimed spots are free
-			}
-			else {
-				block();
+			if (movReq != null) 
+			{//a storage agent responded to a hop request of a robot agent
+				String requestedLocations = movReq.getContent();
+				if(requestedLocations.contains("yes"))
+				{
+					//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else it wouldnt send another request
+					//TODO : store that these areas are now occupied
+					//TODO : Store that this is the agent who claimed the spots, if this agent does another claim request, we know the claimed spots are free
+				}
+				
+				else 
+				{
+					block();
+				}
 			}
 		}
 	}  // End of inner class 
 	
-	private class ItemArrivedService extends CyclicBehaviour {
+	private class CheckArrivalInforms extends CyclicBehaviour {
 		public void action() {//storage agents should listen to other storage agents claiming spots for robotAgents
-			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("item-arrived"), MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-			ACLMessage movReq = myAgent.receive(mt);
-			if (movReq != null) {
-				//TODO : find the first item in the list pendingRequests, with the same AID as the sender of this received message. look what item the robot was carrying (described in same element of the list).
-				//TODO : find an empty spot in the warehouse where the robot can put down the item
-				ACLMessage itemReturn = movReq.createReply();//the robotAgent sender is added as recipient
-				itemReturn.setConversationId("item-return");
-				itemReturn.setPerformative(ACLMessage.REQUEST);
-				itemReturn.setContent("x,y");
-				myAgent.send(itemReturn);
-			}
-			else {
-				block();
+			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("arrival-inform"), MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+			ACLMessage arr = myAgent.receive(mt);
+			if (arr != null) 
+			{//a storage agent responded to a hop request of a robot agent
+				String requestedLocations = arr.getContent();
+				if(requestedLocations.contains((location.x-1)+","+location.y))
+				{//it is near this message
+					ACLMessage repl = arr.createReply();//the robotAgent sender is added as recipient
+					repl.setContent("go");
+					myAgent.send(repl);
+				}
+				
+				else 
+				{
+					block();
+				}
 			}
 		}
 	}  // End of inner class 
 }
+
 
