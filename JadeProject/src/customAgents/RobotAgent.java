@@ -312,7 +312,7 @@ public class RobotAgent extends Agent {
 				arrMsg.addReceiver(storageAgents[i]);
 			} 
 			
-			arrMsg.setContent(location.x+","+location.y);
+			arrMsg.setContent(location.x+","+location.y+";"+holdingItem.x+","+holdingItem.y);
 			arrMsg.setConversationId("arrival-inform");
 			myAgent.send(arrMsg);
 			done();

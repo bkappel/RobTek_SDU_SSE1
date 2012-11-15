@@ -382,6 +382,7 @@ public class StorageAgent extends Agent {
 				String requestedLocations = arr.getContent();
 				if(requestedLocations.contains((location.x-1)+","+location.y))
 				{//it is near this message
+					//TODO : look for an item corresponding to the x y of the provided item, the string looks like x,y;x,y where 2nd point is the storageItemLocation
 					ACLMessage repl = arr.createReply();//the robotAgent sender is added as recipient
 					repl.setContent("go");
 					myAgent.send(repl);
