@@ -22,7 +22,7 @@ Boston, MA  02111-1307, USA.
  *****************************************************************/
 
 package customAgents;
-import jade.core.Agent;
+
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -30,17 +30,23 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.gui.GuiAgent;
+import jade.gui.GuiEvent;
 
-public class GuiAgent extends Agent {
+public class GUIAgent extends GuiAgent {
+
+	static GUIAgent gui;
+	GUI myGUI;
+	
 	public void readMap()
 	{//TODO : Read the map from an external file and store it in global variable
-		
+
 	}
-	
-	
+
+
 	protected void setup() {//entry point of the agent
 		readMap();//read the external map file
-		
+
 		DFAgentDescription dfd = new DFAgentDescription();//Register this agent in the yellow pages service
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
@@ -49,17 +55,21 @@ public class GuiAgent extends Agent {
 		dfd.addServices(sd);
 		try {
 			DFService.register(this, dfd);
-			
+
 		} catch (FIPAException e) {
 			//System.out.println("catch");//debug purpose
 			e.printStackTrace();
 		}
-		
+
 		addBehaviour(new MapProviderService());//respond to incoming map requests from RobotAgents
 		addBehaviour(new MovementSniffService());//sniff movement messages, needed to update GUI
+		
+		myGUI = new GUI(this);
+		myGUI.setVisible(true);
+		//myGUI.makeMove();
 	}
 
-	
+
 	protected void takeDown() {
 		// Deregister from the yellow pages
 		try {
@@ -80,15 +90,17 @@ public class GuiAgent extends Agent {
 				//System.out.println("I received a map request");//debug purpose
 				ACLMessage acptMap = movReq.createReply();//the sender is added as recipient
 				acptMap.setPerformative(ACLMessage.INFORM);
-				acptMap.setContent("mapstring");//TODO : add a string containing the map info here
+				System.out.println("Gonna make mapstring");
+				acptMap.setContent(myGUI.getMapString());
 				myAgent.send(acptMap);
+				System.out.println("Sent mapstring");
 			}
 			else {
 				block();
 			}
 		}
 	}  // End of inner class RequestPerformer
-	
+
 
 	private class MovementSniffService extends CyclicBehaviour {//service sniffs movement from robotAgents
 		public void action() {
@@ -97,11 +109,24 @@ public class GuiAgent extends Agent {
 			if (movReq != null) {//Only listen to INFORM messages with ID "free-request", these are sent by a robot agent right after he made a move
 				String msgString = movReq.getContent();//looks like "x,y" x,y is where the agent has moved to
 				//TODO : visualize the movement of this agent in GUI and globally store this agent's ( .getAID.getName() ) new location
+				String[] content = msgString.split(",");
+				System.out.println("content");
+				myGUI.makeMove(Integer.parseInt(content[0]),
+							   Integer.parseInt(content[1]),
+							   Integer.parseInt(content[2]),
+							   Integer.parseInt(content[3]),
+							   Integer.parseInt(content[4]));
 			}
 			else {
 				block();
 			}
 		}
 	}  // End of inner class 
+
+	@Override
+	protected void onGuiEvent(GuiEvent ev) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
