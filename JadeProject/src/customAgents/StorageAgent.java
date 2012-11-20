@@ -154,7 +154,7 @@ public class StorageAgent extends Agent {
 		try {
 			DFAgentDescription[] result = DFService.search(this, template); 
 			storageAgents = new AID[result.length];
-			System.out.println("Search performed, result amount: " + result.length);
+			//System.out.println("Search performed, result amount: " + result.length);
 			for (int i = 0; i < result.length; ++i) {
 				storageAgents[i] = result[i].getName();
 				System.out.println(storageAgents[i].getName());
@@ -177,7 +177,7 @@ public class StorageAgent extends Agent {
 		try {
 			DFAgentDescription[] result = DFService.search(this, template); 
 			robotAgents = new AID[result.length];
-			System.out.println("Search performed, result amount: " + result.length);
+			//System.out.println("Search performed, result amount: " + result.length);
 			for (int i = 0; i < result.length; ++i) {
 				robotAgents[i] = result[i].getName();
 				System.out.println(robotAgents[i].getName());
@@ -316,33 +316,91 @@ public class StorageAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("hop-request"), MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF));
 			ACLMessage movReq = myAgent.receive(mt);
 			if (movReq != null) {//there is a pending movement request from 1 or more robotAgent
-				String requestedLocations = movReq.getContent();// the movement string looks like x,y;x,y;x,y The agent requests for these spots to be available
+				String requestedLocations = movReq.getContent();// the movement string looks like x,y;x,y;x,y;x,y; The agent requests for these spots to be available
 				
-				boolean requestIsAvailable=false;
-				//TODO : Check if the requested locations are available
-				
-				if(requestIsAvailable==true)
+				// fill an array with the requested points
+				int pointsInHop=requestedLocations.length()/4;
+				List<Point> points = new ArrayList<Point>();
+				for(int i = 0 ; i <pointsInHop;i++)
 				{
-					AID AIDtoCheck = movReq.getSender();
-					boolean exists = false;
-					for(int i=0;i<PathClaimers.size();i++)
-					{
-						if(PathClaimers.get(i).ID==AIDtoCheck)
-						{
-							exists=true;
-						}
-					}
-					//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else the robot wouldnt send another request
+					Point p = new Point();
+					p.x=requestedLocations.charAt(i*4);
+					p.y=requestedLocations.charAt(i*4+2);
+					points.add(p);
 				}
 				
+				//first remove the previous claimed path, if there is one, although do keep the current position claimed, else just claim the agent its current pos
+				boolean agentInExistance=false;
+				for(int i=0;i<PathClaimers.size();i++)
+				{
+					if(PathClaimers.get(i).ID==movReq.getSender())
+					{
+						agentInExistance=true;
+						PathClaimers.get(i).claimedPoints.clear();
+						PathClaimers.get(i).claimedPoints.add(points.get(points.size()-1));
+					}
+				}
+				if(agentInExistance==false)
+				{
+					PathClaimer pc = new PathClaimer(movReq.getSender());
+					pc.claimedPoints.add(points.get(points.size()-1));
+				}
+				
+				//check if the requested hop is available
+				boolean hopIsAvailable=true;
+				for(int i=0;i<PathClaimers.size();i++)
+				{
+					for(int j = 0 ; j <PathClaimers.get(i).claimedPoints.size()-1;j++)//size-1 is already claimed(current position)
+					{
+						for(int p = 0 ; p <points.size()-1;j++)
+						{
+							if(PathClaimers.get(i).claimedPoints.get(j).x==points.get(p).x && PathClaimers.get(i).claimedPoints.get(j).y==points.get(p).y)
+							{
+								hopIsAvailable=false;
+							}
+						}
+					}
+				}
+				
+				if(hopIsAvailable)
+				{//claim the hop
+					for(int i=0;i<PathClaimers.size();i++)
+					{
+						if(PathClaimers.get(i).ID==movReq.getSender())
+						{//the requesting agent its current location is already claimed, find where and add the hop to it
+							for(int j = 0 ; j <points.size();j++)
+							{
+								PathClaimers.get(i).claimedPoints.add(points.get(j));
+							}
+						}
+					}
+				}
+				
+				//start building the message
 				ACLMessage acptMov = movReq.createReply();//the robotAgent sender is added as recipient
 				updateStorageAgents();
 				for (int i = 0; i < storageAgents.length; ++i) {
 					acptMov.addReceiver(storageAgents[i]);// all storage agents are added as recipients, they need to know that the locations are claimed(sharing their map)
 				} 
+				
 				acptMov.setPerformative(ACLMessage.INFORM);
-				acptMov.setContent("sender.getAid.getName() x,y;x,y;x,y yes");//or NO if path is not free(see TODO)
-				//TODO : Store that this is the agent who claimed the spots, if this agent does another claim request, we know the claimed spots are free
+				String sendString="";
+				sendString.concat(movReq.getSender().toString() +",");
+				if(hopIsAvailable)
+				{
+					sendString.concat("yes"+ ",");
+				}
+				else
+				{
+					sendString.concat("no"+ ",");
+				}
+				
+				for(int i = 0 ; i < points.size();i++)
+				{
+					sendString.concat(points.get(i).toString()+",");
+				}
+				acptMov.setContent(sendString);//looks like : "sender.getAid.getName(),yes,x,y,x,y,x,y,x,y"
+				
 				myAgent.send(acptMov);
 			}
 			else {
@@ -357,18 +415,63 @@ public class StorageAgent extends Agent {
 			ACLMessage movReq = myAgent.receive(mt);
 			if (movReq != null) 
 			{//a storage agent responded to a hop request of a robot agent
-				String requestedLocations = movReq.getContent();
-				if(requestedLocations.contains("yes"))
+				String receiveString = movReq.getContent();//looks like: "sender.getAid.getName(),yes,x,y,x,y,x,y,x,y"
+				String[] splitString = receiveString.split(",");
+				int pointsInHop=(splitString.length-2)/2;
+				List<Point> points = new ArrayList<Point>();
+				for(int i = 0 ; i <pointsInHop;i++)
 				{
-					//TODO : Check if this agent claimed a path before, if it did, the path is apparantly free again, else it wouldnt send another request
-					//TODO : store that these areas are now occupied
-					//TODO : Store that this is the agent who claimed the spots, if this agent does another claim request, we know the claimed spots are free
+					Point p = new Point();
+					p.x=Integer.parseInt((String) splitString[i*2+2]);
+					p.y=Integer.parseInt((String) splitString[i*2+3]);
+					points.add(p);
 				}
-				
-				else 
-				{
-					block();
+				if(receiveString.contains("yes"))
+				{//the agent is arrived at his location and got approval to move on, clear his previous claimed hop and claim his new values
+					boolean agentInExistance=false;
+					for(int i=0;i<PathClaimers.size();i++)
+					{
+						if(PathClaimers.get(i).ID==movReq.getSender())
+						{
+							agentInExistance=true;
+							PathClaimers.get(i).claimedPoints.clear();
+							for(int j = 0 ; j <points.size();j++)
+							{
+								PathClaimers.get(i).claimedPoints.add(points.get(j));
+							}
+						}
+					}
+					if(agentInExistance==false)
+					{
+						PathClaimer pc = new PathClaimer(movReq.getSender());
+						for(int j = 0 ; j <points.size();j++)
+						{
+							pc.claimedPoints.add(points.get(j));
+						}
+					}
 				}
+				else
+				{//the agent is arrived at his location but didnt get approval to move on, his previous claimed spots can be freed now
+					boolean agentInExistance=false;
+					for(int i=0;i<PathClaimers.size();i++)
+					{
+						if(PathClaimers.get(i).ID==movReq.getSender())
+						{
+							agentInExistance=true;
+							PathClaimers.get(i).claimedPoints.clear();
+							PathClaimers.get(i).claimedPoints.add(points.get(points.size()-1));
+						}
+					}
+					if(agentInExistance==false)
+					{
+						PathClaimer pc = new PathClaimer(movReq.getSender());
+						pc.claimedPoints.add(points.get(points.size()-1));
+					}
+				}
+			}
+			else 
+			{
+				block();
 			}
 		}
 	}  // End of inner class 
@@ -378,10 +481,10 @@ public class StorageAgent extends Agent {
 			MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchConversationId("arrival-inform"), MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 			ACLMessage arr = myAgent.receive(mt);
 			if (arr != null) 
-			{//a storage agent responded to a hop request of a robot agent
-				String requestedLocations = arr.getContent();
-				if(requestedLocations.contains((location.x-1)+","+location.y))
-				{//it is near this message
+			{
+				String receivedString = arr.getContent();
+				if(receivedString.contains((location.x-1)+","+location.y))
+				{//the robot is near this storage agent
 					//TODO : look for an item corresponding to the x y of the provided item, the string looks like x,y;x,y where 2nd point is the storageItemLocation
 					ACLMessage repl = arr.createReply();//the robotAgent sender is added as recipient
 					repl.setContent("go");

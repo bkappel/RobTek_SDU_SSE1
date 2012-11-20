@@ -35,7 +35,7 @@ public class RobotAgent extends Agent {
 	
 	
 	public Point location;//current location of robot
-
+	boolean claimDropdownID;
 	private AID[] storageAgents;// list of active storage agents
 	private AID[] guiAgents;//list of active guiAgents 
 	public boolean movementVerified;
@@ -96,6 +96,7 @@ public class RobotAgent extends Agent {
 	*entry point of agent
 	*/
 	protected void setup() {
+		claimDropdownID=false;
 		holdingItem=new Point();
 		nextDestination.add(IDLE);
 		movementVerified=false;
@@ -223,7 +224,7 @@ public class RobotAgent extends Agent {
 				ACLMessage reply = msg.createReply();
 
 				reply.setPerformative(ACLMessage.INFORM);
-				System.out.println(getAID().getName() +" will pick up the item at "+ itemX + ","+itemY +" and bring it to start of input queue at: " + (storageAgentX-11) + "," +storageAgentY);
+				System.out.println(getAID().getName() +" will pick up the item at "+ itemX + ","+itemY +" and bring it to storage agent: " + (storageAgentX) + "," +storageAgentY);
 				myAgent.send(reply);
 				
 				if(holdingItem.x==itemX && holdingItem.y==itemY)
@@ -232,27 +233,49 @@ public class RobotAgent extends Agent {
 					{
 						travelPoints.remove(0);
 						nextDestination.remove(0);
-						travelPoints.add(0, new Point(storageAgentX,storageAgentY));
-						travelPoints.add(1, new Point(itemX,itemY));
+						travelPoints.add(0, new Point(storageAgentX-11,storageAgentY));
+						travelPoints.add(1, new Point(storageAgentX-1,storageAgentY));
+						travelPoints.add(2, new Point(storageAgentX-1,storageAgentY-1));
+						travelPoints.add(3, new Point(storageAgentX-11,storageAgentY-1));
+						travelPoints.add(4, new Point(itemX,itemY));
 						nextDestination.add(0,STORAGEAGENT);
+						nextDestination.add(1,STORAGEAGENT);
+						nextDestination.add(2,ITEMDROPDOWN);
+						nextDestination.add(3,ITEMDROPDOWN);
 						nextDestination.add(1,ITEMDROPDOWN);
+						
 					}
 					else if (nextDestination.get(0)==STORAGEAGENT)
 					{
-						travelPoints.remove(1);
-						nextDestination.remove(1);
-						travelPoints.add(1, new Point(storageAgentX,storageAgentY));
-						travelPoints.add(2, new Point(itemX,itemY));
-						nextDestination.add(1,STORAGEAGENT);
-						nextDestination.add(2,ITEMDROPDOWN);
+						travelPoints.remove(4);
+						nextDestination.remove(4);
+						travelPoints.add(4, new Point(storageAgentX-11,storageAgentY));
+						travelPoints.add(5, new Point(storageAgentX-1,storageAgentY));
+						travelPoints.add(6, new Point(storageAgentX-1,storageAgentY-1));
+						travelPoints.add(7, new Point(storageAgentX-11,storageAgentY-1));
+						travelPoints.add(8, new Point(itemX,itemY));
+						nextDestination.add(4,STORAGEAGENT);
+						nextDestination.add(5,STORAGEAGENT);
+						nextDestination.add(6,ITEMDROPDOWN);
+						nextDestination.add(7,ITEMDROPDOWN);
+						nextDestination.add(8,ITEMDROPDOWN);
 					}
 				}
 				else
 				{
 					travelPoints.add(new Point(itemX,itemY));
-					travelPoints.add(new Point(storageAgentX,storageAgentY));
+					travelPoints.add(new Point(storageAgentX-11,storageAgentY));
+					travelPoints.add(new Point(storageAgentX-1,storageAgentY));
+					travelPoints.add(new Point(storageAgentX-1,storageAgentY-1));
+					travelPoints.add(new Point(storageAgentX-11,storageAgentY-1));
+					travelPoints.add(new Point(itemX,itemY));
 					nextDestination.add(ITEMPICKUP);
 					nextDestination.add(STORAGEAGENT);
+					nextDestination.add(STORAGEAGENT);
+					nextDestination.add(ITEMDROPDOWN);
+					nextDestination.add(ITEMDROPDOWN);
+					nextDestination.add(ITEMDROPDOWN);
+					nextDestination.add(ITEMDROPDOWN);
 				}
 			}
 			else {
@@ -383,10 +406,34 @@ public class RobotAgent extends Agent {
 					if(travelPoints.size()!=0)//if there are actually points to visit
 					{
 						calculateNextHop();
+						try {
+							Thread.sleep(2);
+						} catch (InterruptedException e) {
+							e.printStackTrace();//wait a small while to receive a reply to the hop claim
+						}
 					}
 				}
+				
 				if(moveMentQueue.size()>0 && movementVerified)
 				{
+					String conversationString="";
+					String statusID="V";//holding item
+					if(holdingItem.x==0)//not holding item
+					{
+						statusID="R";
+					}
+					if(claimDropdownID==true)
+					{
+						statusID="D";
+						claimDropdownID=false;
+					}
+					if(nextDestination.get(0)==ITEMDROPDOWN&&moveMentQueue.get(0)==travelPoints.get(0))
+					{
+						claimDropdownID=true;
+					}
+					conversationString.concat(statusID+",");
+					conversationString.concat(location.toString()+",");
+					conversationString.concat(moveMentQueue.get(0).toString());
 					location=moveMentQueue.get(0);
 					moveMentQueue.remove(0);
 					if(location == travelPoints.get(0))
@@ -395,7 +442,8 @@ public class RobotAgent extends Agent {
 					}
 					ACLMessage mapUpd = new ACLMessage(ACLMessage.INFORM);
 					mapUpd.addReceiver(guiAgents[0]);//The gui agent needs to know that the robot actually did a move
-					mapUpd.setContent("x,y");//x,y is for the GUI agent, it has to visualize movement
+					
+					mapUpd.setContent(statusID+","+"x,y");//x,y is for the GUI agent, it has to visualize movement
 					mapUpd.setConversationId("map-update");
 					myAgent.send(mapUpd);
 				}
@@ -446,7 +494,7 @@ public class RobotAgent extends Agent {
 			updateStorageAgents();
 			ACLMessage movReq = new ACLMessage(ACLMessage.QUERY_IF);
 			movReq.addReceiver(storageAgents[0]);//address only the first storage agent(could be randomnized to decrease workload), all storage agents are aware of the same map they share among them
-			movReq.setContent("x,y;x,y;x,y;x,y");//last x,y is the agent its current location, this needs to be claimed too
+			movReq.setContent("x,y;x,y;x,y;x,y;");//last x,y is the agent its current location, this needs to be claimed too
 			movReq.setConversationId("hop-request");
 			myAgent.send(movReq);
 			done();
