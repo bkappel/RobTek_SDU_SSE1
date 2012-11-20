@@ -366,7 +366,7 @@ public class StorageAgent extends Agent {
 				
 				if(hopIsAvailable)
 				{//claim the hop
-					System.out.println(PathClaimers.size());
+					//System.out.println(PathClaimers.size());
 					for(int i=0;i<PathClaimers.size();i++)
 					{
 						if(PathClaimers.get(i).ID==movReq.getSender())

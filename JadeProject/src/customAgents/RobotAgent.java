@@ -482,7 +482,7 @@ public class RobotAgent extends Agent {
 					conversationString+=(statusID + ",");
 					conversationString+=(location.x + ",");
 					conversationString+=(location.y + ",");
-					conversationString+=moveMentQueue.get(0).x;
+					conversationString+=(moveMentQueue.get(0).x + ",");
 					conversationString+=moveMentQueue.get(0).y;
 					location = moveMentQueue.get(0);
 					moveMentQueue.remove(0);
