@@ -479,9 +479,11 @@ public class RobotAgent extends Agent {
 							&& moveMentQueue.get(0) == travelPoints.get(0)) {
 						claimDropdownID = true;
 					}
-					conversationString.concat(statusID + ",");
-					conversationString.concat(location.toString() + ",");
-					conversationString.concat(moveMentQueue.get(0).toString());
+					conversationString+=(statusID + ",");
+					conversationString+=(location.x + ",");
+					conversationString+=(location.y + ",");
+					conversationString+=moveMentQueue.get(0).x;
+					conversationString+=moveMentQueue.get(0).y;
 					location = moveMentQueue.get(0);
 					moveMentQueue.remove(0);
 					if (location == travelPoints.get(0)) {
@@ -492,7 +494,7 @@ public class RobotAgent extends Agent {
 														// know that the robot
 														// actually did a move
 
-					mapUpd.setContent(statusID + "," + "x,y");// x,y is for the
+					mapUpd.setContent(conversationString);// x,y is for the
 																// GUI agent, it
 																// has to
 																// visualize
