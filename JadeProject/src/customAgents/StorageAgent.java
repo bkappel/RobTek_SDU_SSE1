@@ -87,13 +87,14 @@ public class StorageAgent extends Agent {
 			doDelete();
 		}
 		
+		//need 132 products
 		// Create the product list
 		//TODO : think of different products and fill our warehouse, see our warehouse map file
-		addProduct("Chair",new Point(4,4));
-		addProduct("Table",new Point(9,11));
-		addProduct("Laptop",new Point(12,7));
-		addProduct("Closet",new Point(16,15));
-		addProduct("Bed",new Point(18,17));
+		addProduct("Jupiler",new Point(4,4));
+		addProduct("Heineken",new Point(9,11));
+		addProduct("Leffe",new Point(12,7));
+		addProduct("Hoegaarden",new Point(16,15));
+		addProduct("Albani",new Point(17,17));
 
 		//register this agent at the yellow pages service
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -485,7 +486,19 @@ public class StorageAgent extends Agent {
 				String receivedString = arr.getContent();
 				if(receivedString.contains((location.x-1)+","+location.y))
 				{//the robot is near this storage agent
-					//TODO : look for an item corresponding to the x y of the provided item, the string looks like x,y;x,y where 2nd point is the storageItemLocation
+					
+					Integer itemX = Integer.parseInt(receivedString.substring(receivedString.indexOf(':', 1)+1,
+							receivedString.indexOf(',', receivedString.indexOf(':', 1))));
+					
+					Integer itemY = Integer.parseInt(receivedString.substring(receivedString.indexOf(',', receivedString.indexOf(':', 1)+1),receivedString.length()-1));
+					for(Product p: products)
+					{
+						if(p.location==new Point(itemX,itemY))
+						{
+							System.out.println("I received the product: "+p.name);
+							
+						}
+					}
 					ACLMessage repl = arr.createReply();//the robotAgent sender is added as recipient
 					repl.setContent("go");
 					myAgent.send(repl);
