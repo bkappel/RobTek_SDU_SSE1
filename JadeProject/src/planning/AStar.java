@@ -49,8 +49,11 @@ public class AStar {
                 cls[j][i].resetCell();
             }
         }
-        beginCell = cls[source.x][source.y];
-        finishCell = cls[destination.x][destination.y];
+        beginCell = cls[source.y][source.x];
+        finishCell = cls[destination.y][destination.x];
+        beginCell.setStart(true);
+        finishCell.setFinish(true);
+        
         edge = new Vector();
         done = new Vector();
         
