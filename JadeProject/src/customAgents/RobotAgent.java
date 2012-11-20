@@ -558,7 +558,10 @@ public class RobotAgent extends Agent {
 													// agents are aware of the
 													// same map they share among
 													// them
-			movReq.setContent("x,y;x,y;x,y;x,y;");// last x,y is the agent its
+			movReq.setContent(moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+","+ //;x,y;x,y;x,y;");// last x,y is the agent its
+					moveMentQueue.get(1).x+","+moveMentQueue.get(1).y+","+
+					moveMentQueue.get(2).x+","+moveMentQueue.get(2).y+","+
+					location.x+","+location.y+",");//yes, the last comma is needed
 													// current location, this
 													// needs to be claimed too
 			movReq.setConversationId("hop-request");

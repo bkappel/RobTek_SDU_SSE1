@@ -325,8 +325,8 @@ public class StorageAgent extends Agent {
 				for(int i = 0 ; i <pointsInHop;i++)
 				{
 					Point p = new Point();
-					p.x=requestedLocations.charAt(i*4);
-					p.y=requestedLocations.charAt(i*4+2);
+					p.x= Integer.parseInt(String.valueOf(requestedLocations.charAt(i*4)));
+					p.y= Integer.parseInt(String.valueOf(requestedLocations.charAt(i*4+2)));
 					points.add(p);
 				}
 				
@@ -345,6 +345,7 @@ public class StorageAgent extends Agent {
 				{
 					PathClaimer pc = new PathClaimer(movReq.getSender());
 					pc.claimedPoints.add(points.get(points.size()-1));
+					PathClaimers.add(pc);
 				}
 				
 				//check if the requested hop is available
@@ -365,6 +366,7 @@ public class StorageAgent extends Agent {
 				
 				if(hopIsAvailable)
 				{//claim the hop
+					System.out.println(PathClaimers.size());
 					for(int i=0;i<PathClaimers.size();i++)
 					{
 						if(PathClaimers.get(i).ID==movReq.getSender())
@@ -386,19 +388,20 @@ public class StorageAgent extends Agent {
 				
 				acptMov.setPerformative(ACLMessage.INFORM);
 				String sendString="";
-				sendString.concat(movReq.getSender().toString() +",");
+				sendString+=(movReq.getSender().toString() +",");
 				if(hopIsAvailable)
 				{
-					sendString.concat("yes"+ ",");
+					sendString+=("yes"+ ",");
 				}
 				else
 				{
-					sendString.concat("no"+ ",");
+					sendString+=("no"+ ",");
 				}
 				
 				for(int i = 0 ; i < points.size();i++)
 				{
-					sendString.concat(points.get(i).toString()+",");
+					sendString+=(points.get(i).x +",");
+					sendString+=(points.get(i).y +",");
 				}
 				acptMov.setContent(sendString);//looks like : "sender.getAid.getName(),yes,x,y,x,y,x,y,x,y"
 				
