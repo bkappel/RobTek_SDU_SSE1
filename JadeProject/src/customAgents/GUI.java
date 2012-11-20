@@ -37,10 +37,10 @@ public class GUI extends JFrame implements ActionListener{
 		this.myAgent = agent;
 		startGui();
 	}
-	public void makeMove(int who, int fromX, int fromY, int toX, int toY) {
+	public void makeMove(char who, int fromX, int fromY, int toX, int toY) {
 
-		int fromIndex = fromX * mapWidth + fromY;
-		int toIndex = toX * mapWidth + toY;
+		int fromIndex = fromY * mapWidth + fromX;
+		int toIndex = toY * mapWidth + toX;
 
 		Color fromColor = Color.PINK;
 		Color toColor = Color.PINK;

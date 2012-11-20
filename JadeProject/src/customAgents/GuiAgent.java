@@ -108,8 +108,9 @@ public class GUIAgent extends GuiAgent {
 				String msgString = movReq.getContent();//looks like "x,y" x,y is where the agent has moved to
 				//TODO : visualize the movement of this agent in GUI and globally store this agent's ( .getAID.getName() ) new location
 				String[] content = msgString.split(",");
-				System.out.println("Here is the content: "+content);
-				myGUI.makeMove(Integer.parseInt(content[0]),
+				
+				System.out.println("Here is the content: "+msgString);
+				myGUI.makeMove(content[0].charAt(0),
 							   Integer.parseInt(content[1]),
 							   Integer.parseInt(content[2]),
 							   Integer.parseInt(content[3]),

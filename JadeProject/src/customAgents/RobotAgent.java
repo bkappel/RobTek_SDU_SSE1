@@ -632,7 +632,7 @@ public class RobotAgent extends Agent {
 			mapUpd.addReceiver(guiAgents[0]);// The gui agent needs to know
 												// where the agent is
 												// initialized
-			mapUpd.setContent("R,27,1" + location.x + "," + location.y);// put the agent on
+			mapUpd.setContent("R,26,1" + "," + location.x + "," + location.y);// put the agent on
 																// the map
 			mapUpd.setConversationId("map-update");
 			myAgent.send(mapUpd);
