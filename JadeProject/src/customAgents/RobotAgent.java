@@ -387,13 +387,13 @@ public class RobotAgent extends Agent {
 		uiMap = new Map(width, height);
 		String map = sub[2];
 
-		char[][] strMap = new char[width][height];
+		char[][] strMap = new char[height][width];
 
 		for (int i = 0; i < height; i++) {
 			String line = map.substring((i * width), ((i * width) + width));
 			int linePos = 0;
 			for (char p : line.toCharArray()) {
-				switch (p) {
+				/*switch (p) {
 				case MAPMOVEPLACE:
 					strMap[linePos][i] = p;// String.valueOf(p);//create movable
 											// position in graph
@@ -410,7 +410,8 @@ public class RobotAgent extends Agent {
 					strMap[linePos][i] = p;// String.valueOf(p);//create product
 											// position in graph
 					break;
-				}
+				}*/
+				strMap[i][linePos] = p;
 				linePos++;
 			}
 		}
@@ -418,12 +419,12 @@ public class RobotAgent extends Agent {
 	}
 
 	private void createMap(char[][] stringMap, int width, int height) {
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
+		for (int i = 0; i < height-1; i++) {
+			for (int j = 0; j < width-1; j++) {
 				char str = stringMap[i][j];
 				// Node n = createGraphNode(str, i, j);
 				Cell cl = new Cell();
-				cl.setPosition(new Point(i, j));
+				cl.setPosition(new Point(j, i));
 				/*
 				 * MAPMOVEPLACE = '.'; MAPPRODUCTPLACE = 'P'; MAPOUTPUTQUEUE =
 				 * 'o'; MAPINPUTQUEUE = 'I'; MAPWALL = 'X';

@@ -67,7 +67,7 @@ public class GUI extends JFrame implements ActionListener{
 	}
 
 	public String getMapString() {
-		return mapWidth + ',' + mapHeight + ',' + mapString;
+		return mapWidth + ";" + mapHeight + ";" + mapString;
 	}
 	public void setMapString(String mapString) {
 		mapString = mapString;
