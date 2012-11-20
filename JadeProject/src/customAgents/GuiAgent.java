@@ -90,10 +90,8 @@ public class GUIAgent extends GuiAgent {
 				//System.out.println("I received a map request");//debug purpose
 				ACLMessage acptMap = movReq.createReply();//the sender is added as recipient
 				acptMap.setPerformative(ACLMessage.INFORM);
-				System.out.println("Gonna make mapstring");
 				acptMap.setContent(myGUI.getMapString());
 				myAgent.send(acptMap);
-				System.out.println("Sent mapstring");
 			}
 			else {
 				block();
@@ -110,7 +108,7 @@ public class GUIAgent extends GuiAgent {
 				String msgString = movReq.getContent();//looks like "x,y" x,y is where the agent has moved to
 				//TODO : visualize the movement of this agent in GUI and globally store this agent's ( .getAID.getName() ) new location
 				String[] content = msgString.split(",");
-				System.out.println("content");
+				System.out.println("Here is the content: "+content);
 				myGUI.makeMove(Integer.parseInt(content[0]),
 							   Integer.parseInt(content[1]),
 							   Integer.parseInt(content[2]),
