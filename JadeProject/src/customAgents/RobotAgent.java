@@ -4,6 +4,10 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import planning.AStar;
+import planning.Cell;
+import planning.Map;
+
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -23,6 +27,13 @@ public class RobotAgent extends Agent {
 	final static int STORAGEAGENT=2;
 	final static int ITEMDROPDOWN=3;
 	
+	final static char MAPMOVEPLACE = '.';
+	final static char MAPPRODUCTPLACE = 'P';
+	final static char MAPOUTPUTQUEUE = 'o';
+	final static char MAPINPUTQUEUE = 'I';
+	final static char MAPWALL = 'X';
+	
+	
 	public Point location;//current location of robot
 
 	private AID[] storageAgents;// list of active storage agents
@@ -34,6 +45,7 @@ public class RobotAgent extends Agent {
 	public Point holdingItem;//the warehouse coords of the current holding item, 0,0 is no item
 	public List<Integer> nextDestination = new ArrayList<Integer>();//0=nothing, 1=itemPickup, 2=storageAgent, 3=itemDropdown
 	public boolean awaitingRelease;//will be true if robot agent enters a storage agent, after receiving a GO message it will be false again
+	private Map uiMap = null; 
 	/**
 	*refreshes the list of current active GuiAgents
 	*/
@@ -88,6 +100,7 @@ public class RobotAgent extends Agent {
 		nextDestination.add(IDLE);
 		movementVerified=false;
 		awaitingRelease=false;
+		//uiMap = new Map();
 		updateGuiAgents();//Robot agent wont start without an active GuiAgent
 		if(guiAgents.length==0)
 		{
@@ -148,8 +161,18 @@ public class RobotAgent extends Agent {
 	
 	public Integer calculatePathCost(Point l)
 	{
-		//TODO : the agent has a current position and a list of points (travelPoints) orderd to visit. return the current amount of spaces it has to move before being idle again
+		//the agent has a current position and a list of points (travelPoints) orderd to visit. return the current amount of spaces it has to move before being idle again
 		//temporarily add the given point to the end of travelPoints,  a request has been made how far the robot has to move to THAT point
+		
+		if(uiMap == null) return 1000000000;
+			
+		AStar finder = new AStar();
+		Cell[] path = finder.findPath(uiMap, location, l);
+		if(path != null)
+		{
+			return path.length;
+		}
+		
 		return (5);//Debugging purpose in version without a loaded map
 	}
 	
@@ -239,7 +262,21 @@ public class RobotAgent extends Agent {
 	}  // End of inner class OfferRequestsServer
 	
 	public void calculateNextHop()
-	{//TODO: look at list of travel points, and the list of occupiedPoints. calculate next 3 areas and put them in the list movementQueue
+	{
+		// look at list of travel points, and the list of occupiedPoints. calculate next 3 areas and put them in the list movementQueue
+		
+		if(this.travelPoints.size() == 0)return;
+		
+		Point nextDest = this.travelPoints.get(0);
+		AStar finder = new AStar();
+		Cell[] path = finder.findPath(uiMap, location, nextDest);
+		if(path != null)
+		{
+			this.moveMentQueue.add(path[0].getPosition());
+			this.moveMentQueue.add(path[1].getPosition());
+			this.moveMentQueue.add(path[2].getPosition());
+		}
+		
 		
 		//fill moveMentQueue with the 3 found locations
 		addBehaviour(new HopRequest());//one shot behaviour to claim the hop
@@ -264,6 +301,70 @@ public class RobotAgent extends Agent {
 			holdingItem.x=0;
 			holdingItem.y=0;
 			break;
+		}
+	}
+		
+	public void createUIGraph(String uiStr)
+	{
+		String[] sub = uiStr.split(";");
+		int width = Integer.parseInt(sub[0]);
+		int height = Integer.parseInt(sub[1]);
+		uiMap = new Map(width, height);
+		String map = sub[2];
+		
+		char[][] strMap = new char[width][height];
+		
+		for(int i =0; i< height; i++)
+		{
+			String line = map.substring((i*width), ((i*width)+width));
+			int linePos = 0;
+			for(char p : line.toCharArray())
+			{
+				switch(p)
+				{
+				case MAPMOVEPLACE: strMap[linePos][i] = p;//String.valueOf(p);//create movable position in graph
+					break;
+				case MAPOUTPUTQUEUE: strMap[linePos][i] = p;//String.valueOf(p);//create output queue position in graph
+					break;
+				case MAPINPUTQUEUE: strMap[linePos][i] = p;//String.valueOf(p);//create input queue position in graph
+					break;
+				case MAPPRODUCTPLACE: strMap[linePos][i] = p;//String.valueOf(p);//create product position in graph
+					break;
+				}
+				linePos++;
+			}
+		}
+		this.createMap(strMap, width, height);
+	}
+	
+	private void createMap(char[][] stringMap, int width, int height)
+	{
+		for(int i =0; i < height; i++)
+		{
+			for(int j =0; j < width; j++)
+			{
+				char str = stringMap[i][j];
+				//Node n = createGraphNode(str, i, j);
+				Cell cl = new Cell();
+				cl.setPosition(new Point(i,j));
+				/*
+				 * 	MAPMOVEPLACE = '.';
+					MAPPRODUCTPLACE = 'P';
+				   	MAPOUTPUTQUEUE = 'o';
+					MAPINPUTQUEUE = 'I';
+					MAPWALL = 'X';
+				 */
+				if(str == MAPMOVEPLACE 
+						|| str == MAPOUTPUTQUEUE 
+						|| str == MAPINPUTQUEUE)
+				{
+					cl.setBlocked(false);
+				}else //is not movable create block
+				{
+					cl.setBlocked(true);
+				}
+				uiMap.addCell(cl);
+			}
 		}
 	}
 	
@@ -372,10 +473,17 @@ public class RobotAgent extends Agent {
 				}
 				else
 				{
-					for(int i = 0;i<moveMentQueue.size();i++)
+					//request new map
+					ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+					mapReq.addReceiver(guiAgents[0]);
+					mapReq.setContent("Give me map");
+					mapReq.setConversationId("map-request");
+					myAgent.send(mapReq);
+					
+					/*for(int i = 0;i<moveMentQueue.size();i++)
 					{
 						occupiedPoints.add(moveMentQueue.get(i));
-					}
+					}*/
 					calculateNextHop();
 				}
 			}
@@ -416,11 +524,14 @@ public class RobotAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {//this agent received a map after his map request
 				String response = msg.getContent();
-				//TODO : process the map string to a global stored map
+				//TODO : process the map string to a local stored map
+				createUIGraph(response);
 			}
 			else {
 				block();
 			}
 		}
+		
+		//private void 
 	}
 }
