@@ -3,6 +3,7 @@ package testing;
 import static org.junit.Assert.*;
 
 import java.awt.Point;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
@@ -46,15 +47,28 @@ public class PlanningTest {
 						"XXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 		
 		AStar planner = new AStar();
-		Point src = new Point(12,7);
-		Point dest = new Point(15,2);
 		
-		Cell[] path = planner.findPath(this.createUIGraph(mpStr), src, dest);
+		ArrayList<Point> srcPoint = new ArrayList<Point>();
+		srcPoint.add(new Point(1,1));
+		srcPoint.add(new Point(4,4));
+		srcPoint.add(new Point(15,2));
+		srcPoint.add(new Point(25,2));
+		srcPoint.add(new Point(15,1));
+		srcPoint.add(new Point(4,4));
 		
-		for(Cell c : path)
+		/*Point src = new Point(12,7);
+		Point dest = new Point(15,2);*/
+
+		for(int i =0; i < srcPoint.size()-1; i++)
 		{
-			System.out.println("x: " + c.getPosition().x + " y: " + c.getPosition().y);
+			Cell[] path = planner.findPath(this.createUIGraph(mpStr), srcPoint.get(i), srcPoint.get(i+1));
+			for(Cell c : path)
+			{
+				System.out.println("x: " + c.getPosition().x + " y: " + c.getPosition().y);
+			}
 		}
+		
+		
 		
 		
 		
@@ -113,7 +127,7 @@ public class PlanningTest {
 				 * MAPMOVEPLACE = '.'; MAPPRODUCTPLACE = 'P'; MAPOUTPUTQUEUE =
 				 * 'o'; MAPINPUTQUEUE = 'I'; MAPWALL = 'X';
 				 */
-				if (str == MAPMOVEPLACE || str == MAPOUTPUTQUEUE
+				/*if (str == MAPMOVEPLACE || str == MAPOUTPUTQUEUE
 						|| str == MAPINPUTQUEUE) {
 					cl.setBlocked(false);
 				}else if(str == MAPPRODUCTPLACE)
@@ -123,7 +137,23 @@ public class PlanningTest {
 					else // is not movable create block
 				{
 					cl.setBlocked(true);
-				}
+				}*/
+				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
+				|| str == MAPINPUTQUEUE)*/ {
+			cl.setBlocked(false);
+		}else if(str == MAPOUTPUTQUEUE
+				|| str == MAPINPUTQUEUE)
+			{
+				cl.setBlocked(false);
+				cl.setQueue(true);
+			}else if(str == MAPPRODUCTPLACE)
+			{
+				cl.setProduct(true);
+			}
+			else // is not movable create block
+		{
+			cl.setBlocked(true);
+		}
 				uiMap.addCell(cl);
 			}
 		}

@@ -271,6 +271,8 @@ public class StorageAgent extends Agent {
 					repliesCnt++;
 					if (repliesCnt >= robotAgents.length) {
 						// We received all replies
+						System.out.println("bestprice: " +  bestPrice);
+						System.out.println("cheapest bot: " + cheapestRobot.getName());
 						step = 2;
 						/*System.out.println("Received all replies");*/
 					}
@@ -380,14 +382,18 @@ public class StorageAgent extends Agent {
 						agentInExistance = true;
 						PathClaimers.get(i).claimedPoints.clear();
 						//Add all
+						
+						//PathClaimers.get(i).claimedPoints.addAll(points);
 						PathClaimers.get(i).claimedPoints.add(points.get(points
 								.size() - 1));
+						//System.out.println("claimedPoints size: " + PathClaimers.get(i).claimedPoints.size());
 					}
 				}
 				if (agentInExistance == false) {
 					PathClaimer pc = new PathClaimer(movReq.getSender());
 					//Add all
 					pc.claimedPoints.add(points.get(points.size() - 1));
+					//pc.claimedPoints.addAll(points);
 					PathClaimers.add(pc);
 				}
 
@@ -401,10 +407,7 @@ public class StorageAgent extends Agent {
 							.size() - 1; j++)// size-1 is already
 												// claimed(current position)
 					{
-						for (int p = 0; p < points.size() - 1; j++) {
-							System.out.println(PathClaimers.size());
-							System.out.println(points.size());
-							System.out.println(PathClaimers.get(i).claimedPoints.size());
+						for (int p = 0; p < points.size() -1; p++) {
 							if (PathClaimers.get(i).claimedPoints.get(j).x == points
 									.get(p).x
 									&& PathClaimers.get(i).claimedPoints.get(j).y == points
@@ -497,7 +500,6 @@ public class StorageAgent extends Agent {
 				List<Point> points = new ArrayList<Point>();
 				for (int i = 0; i < pointsInHop; i++) {
 
-					// TODO: MAYBE
 					Point p = new Point();
 					p.x = Integer.parseInt((String) splitString[i * 2 + 2]);
 					p.y = Integer.parseInt((String) splitString[i * 2 + 3]);

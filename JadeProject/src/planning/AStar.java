@@ -15,7 +15,7 @@ public class AStar {
 	private Vector done;
 	private Map map;
 	private int stepSpeed = 20;
-	private int maxSteps = 30;
+	private int maxSteps = 450;
 	
 	private double distFromStart = 0;
 	private boolean findFirst = false; 
@@ -35,7 +35,7 @@ public class AStar {
 	
 	public Cell[] findPath(Map map, Point source, Point destination)
 	{
-		System.out.println("Find path from: "+source.toString()+" to: "+destination.toString());
+		//System.out.println("Find path from: "+source.toString()+" to: "+destination.toString());
 		
 		Cell[][] cls = map.getCells();
 		mincost = Double.MAX_VALUE;
@@ -114,7 +114,7 @@ public class AStar {
             if(found){return FOUND;}
         }
         if(edge.size()==0){return NOPATH;}
-        System.out.println("NOT FOUND");
+        
         return NOTFOUND;
     }
 
@@ -153,7 +153,7 @@ public class AStar {
 			}
 		}
 		
-		System.out.println("Found path of size:" + tmp.size());
+		//System.out.println("Found path of size:" + tmp.size());
 		
 		return tmp.toArray(new Cell[tmp.size()]);
 		

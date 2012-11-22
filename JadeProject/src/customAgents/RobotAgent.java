@@ -107,8 +107,8 @@ public class RobotAgent extends Agent {
 	 */
 	protected void setup() {
 		claimDropdownID = false;
-		holdingItem = new Point();
-		nextDestination.add(IDLE);
+		holdingItem = new Point(-1,-1);
+		//nextDestination.add(IDLE);
 		movementVerified = false;
 		awaitingRelease = false;
 		// uiMap = new Map();
@@ -154,7 +154,7 @@ public class RobotAgent extends Agent {
 		addBehaviour(new AcceptRequestServer());// accept an incomming request
 		addBehaviour(new MapReceiver());// awaits a map message from guiAgent
 		addBehaviour(new MapRequest());// one shot behaviour to load the map
-		addBehaviour(new MovementBehaviour(this, 1000));// every second the
+		addBehaviour(new MovementBehaviour(this, 500));// every second the
 														// robot is allowed to
 														// move a spot
 		addBehaviour(new HopReply());// Behaviour which awaits incomming
@@ -191,7 +191,23 @@ public class RobotAgent extends Agent {
 		AStar finder = new AStar();
 		Cell[] path = finder.findPath(uiMap, location, l);
 		if (path != null) {
-			return path.length;
+			int totalLength = path.length;
+			if (holdingItem.x != -1 && holdingItem.y != -1)
+			{
+				System.out.println("I'm holding an item: " + this.getName());
+				if(travelPoints.size() > 0)
+				{
+				totalLength += finder.findPath(uiMap, location, travelPoints.get(0)).length;
+				for(int i =0; i < travelPoints.size()-1; i++)
+				{
+					Point srcDest = this.travelPoints.get(i);
+					Point nxtDest = this.travelPoints.get(i+1);
+					totalLength += finder.findPath(uiMap, srcDest, nxtDest).length;
+				}
+				}
+			}
+			System.out.println("This is the total length: " + totalLength + " me: " + this.getName());
+			return totalLength;
 		}
 
 		return (5);// Debugging purpose in version without a loaded map
@@ -401,16 +417,19 @@ public class RobotAgent extends Agent {
 
 		case ITEMDROPDOWN:// the real fysical robot would have to drop the item
 							// here
-			holdingItem.x = 0;
-			holdingItem.y = 0;
+			if(holdingItem.x == location.x && holdingItem.y == location.y)
+			{
+				holdingItem.x = 0;
+				holdingItem.y = 0;
+			}
 			break;
 		}
 		nextDestination.remove(0);
 		travelPoints.remove(0);
-		if(nextDestination.get(0) == ITEMDROPDOWN)
+		/*if(nextDestination.get(0) == ITEMDROPDOWN)
 		{
 			boolean breaker = true;
-		}
+		}*/
 	}
 
 	public void createUIGraph(String uiStr) {

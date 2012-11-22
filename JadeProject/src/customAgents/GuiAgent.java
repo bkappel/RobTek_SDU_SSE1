@@ -79,7 +79,7 @@ public class GUIAgent extends GuiAgent {
 			fe.printStackTrace();
 		}
 		// Printout a dismissal message
-		System.out.println("GuiAgent "+getAID().getName()+" terminating.");
+		//System.out.println("GuiAgent "+getAID().getName()+" terminating.");
 	}
 
 	private class MapProviderService extends CyclicBehaviour {//behavior listens to incomming map requests and replies with map
@@ -109,7 +109,7 @@ public class GUIAgent extends GuiAgent {
 				//TODO : visualize the movement of this agent in GUI and globally store this agent's ( .getAID.getName() ) new location
 				String[] content = msgString.split(",");
 				
-				System.out.println("Here is the content: "+msgString);
+				//System.out.println("Here is the content: "+msgString);
 				myGUI.makeMove(content[0].charAt(0),
 							   Integer.parseInt(content[1]),
 							   Integer.parseInt(content[2]),
