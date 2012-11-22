@@ -204,8 +204,8 @@ public class RobotAgent extends Agent {
 					.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
 			
-			System.out.println("REQUEST RECEIVED");
-			System.out.println(msg);
+			/*System.out.println("REQUEST RECEIVED");
+			System.out.println(msg);*/
 			if (msg != null) {// only respond to CFP messages
 				// CFP Message received. Process it
 				String requestedLocation = msg.getContent();
@@ -465,7 +465,11 @@ public class RobotAgent extends Agent {
 				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
 						|| str == MAPINPUTQUEUE)*/ {
 					cl.setBlocked(false);
-				}else if(str == MAPPRODUCTPLACE)
+				}else if(str == MAPOUTPUTQUEUE
+						|| str == MAPINPUTQUEUE)
+					{
+						cl.setQueue(true);
+					}else if(str == MAPPRODUCTPLACE)
 					{
 						cl.setProduct(true);
 					}

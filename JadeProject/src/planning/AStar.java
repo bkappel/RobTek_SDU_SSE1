@@ -35,6 +35,8 @@ public class AStar {
 	
 	public Cell[] findPath(Map map, Point source, Point destination)
 	{
+		System.out.println("Find path from: "+source.toString()+" to: "+destination.toString());
+		
 		Cell[][] cls = map.getCells();
 		mincost = Double.MAX_VALUE;
         for(int i=0;i<map.getWidth()-1;i++){
@@ -112,6 +114,7 @@ public class AStar {
             if(found){return FOUND;}
         }
         if(edge.size()==0){return NOPATH;}
+        System.out.println("NOT FOUND");
         return NOTFOUND;
     }
 
@@ -150,8 +153,10 @@ public class AStar {
 			}
 		}
 		
+		System.out.println("Found path of size:" + tmp.size());
 		
 		return tmp.toArray(new Cell[tmp.size()]);
+		
 		//return pathInv.toArray(new Cell[pathInv.size()]);
 	}
 	

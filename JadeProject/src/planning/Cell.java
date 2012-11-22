@@ -4,7 +4,8 @@ import java.awt.Point;
 
 public class Cell {
 	
-	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, PRODUCT = 50,CLAIMED = 5;
+	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, 
+			PRODUCT = 50, QUEUE = 1,CLAIMED = 5;
 	private double cost = 1.0;
 	private Point position;
 	
@@ -93,6 +94,12 @@ public class Cell {
 	public boolean isProduct()
 	{
 		return cost== PRODUCT;
+	}
+	
+	public void setQueue(boolean flag)
+	{
+		if(flag)cost = QUEUE;
+		else cost = NORMAL;
 	}
 	
 	public void setProduct(boolean flag)

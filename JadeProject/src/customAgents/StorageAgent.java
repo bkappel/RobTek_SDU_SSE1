@@ -350,10 +350,11 @@ public class StorageAgent extends Agent {
 				// fill an array with the requested points
 				int pointsInHop = requestedLocations.length() / 4;
 				List<Point> points = new ArrayList<Point>();
-				String[] splits = requestedLocations.split(",");
+				
 				
 				for (int i = 0; i < pointsInHop - 1; i++) {
 					/*System.out.println("reqeuestedlocs: " + requestedLocations);*/
+					String[] splits = requestedLocations.split(",");
 					Point p = new Point();
 					/*
 					 * p.x=
