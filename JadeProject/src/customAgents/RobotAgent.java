@@ -107,7 +107,7 @@ public class RobotAgent extends Agent {
 	 */
 	protected void setup() {
 		claimDropdownID = false;
-		holdingItem = new Point(-1,-1);
+		holdingItem = new Point(0,0);
 		//nextDestination.add(IDLE);
 		movementVerified = false;
 		awaitingRelease = false;
@@ -186,13 +186,16 @@ public class RobotAgent extends Agent {
 
 		if (uiMap == null)
 			return 1000000000;
-		if(location.x == l.x && location.y == l.y){return 100000;}
+		if(location.x == l.x && location.y == l.y){return 0;}
 
 		AStar finder = new AStar();
 		Cell[] path = finder.findPath(uiMap, location, l);
 		if (path != null) {
 			int totalLength = path.length;
-			if (holdingItem.x != -1 && holdingItem.y != -1)
+			
+			System.out.println("robot: " + this.getName() + " holdingitem: " + holdingItem.toString());
+			
+			if (holdingItem.x != 0 && holdingItem.y != 0)
 			{
 				System.out.println("I'm holding an item: " + this.getName());
 				if(travelPoints.size() > 0)
@@ -322,7 +325,7 @@ public class RobotAgent extends Agent {
 						nextDestination.add(1, STORAGEAGENT);
 						nextDestination.add(2, ITEMDROPDOWN);
 						nextDestination.add(3, ITEMDROPDOWN);
-						nextDestination.add(1, ITEMDROPDOWN);
+						nextDestination.add(4, ITEMDROPDOWN);
 
 					} else if (nextDestination.get(0) == STORAGEAGENT) {
 						travelPoints.remove(4);
@@ -376,7 +379,12 @@ public class RobotAgent extends Agent {
 
 		Point nextDest = this.travelPoints.get(0);
 		AStar finder = new AStar();
-		if(location.x == nextDest.x && location.y == nextDest.y){return;}			
+		if(location.x == nextDest.x && location.y == nextDest.y)
+		{
+			this.moveMentQueue.add(location);
+			return;
+		}else
+		{
 		Cell[] path = finder.findPath(uiMap, location, nextDest);
 		if (path != null) {
 			if(path.length > 1)
@@ -392,6 +400,7 @@ public class RobotAgent extends Agent {
 				this.moveMentQueue.add(path[3].getPosition());
 			}
 			//this.moveMentQueue.add(path[0].getPosition());
+		}
 		}
 
 		// fill moveMentQueue with the 3 found locations
