@@ -4,7 +4,7 @@ import java.awt.Point;
 
 public class Cell {
 	
-	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, CLAIMED = 5;
+	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, PRODUCT = 50,CLAIMED = 5;
 	private double cost = 1.0;
 	private Point position;
 	
@@ -90,6 +90,17 @@ public class Cell {
 		return cost == BLOCKED;
 	}
 	
+	public boolean isProduct()
+	{
+		return cost== PRODUCT;
+	}
+	
+	public void setProduct(boolean flag)
+	{
+		if(flag)cost = PRODUCT;
+		else cost = NORMAL;
+	}
+	
 	public void setBlocked(boolean flag)
 	{
 		if(flag)cost = BLOCKED;
@@ -106,6 +117,8 @@ public class Cell {
 		used = false;
 		this.setPartOfPath(false);
 		this.distFromStart = this.distFromFinish = -1;
+		this.setFinish(false);
+		this.setStart(false);
 	}
 	
 	public boolean isPartOfPath()

@@ -67,15 +67,15 @@ public class RobotAgent extends Agent {
 		try {
 			DFAgentDescription[] result = DFService.search(this, template);
 			guiAgents = new AID[result.length];
-			System.out.println("Search performed, result amount: "
-					+ result.length);
+			/*System.out.println("Search performed, result amount: "
+					+ result.length);*/
 			for (int i = 0; i < result.length; ++i) {
 				guiAgents[i] = result[i].getName();
-				System.out.println(guiAgents[i].getName());
+				/*System.out.println(guiAgents[i].getName());*/
 			}
 		} catch (FIPAException e) {
 			e.printStackTrace();
-			System.out.println("in the catch");
+			/*System.out.println("in the catch");*/
 		}
 	}
 
@@ -90,15 +90,15 @@ public class RobotAgent extends Agent {
 		try {
 			DFAgentDescription[] result = DFService.search(this, template);
 			storageAgents = new AID[result.length];
-			System.out.println("Search performed, result amount: "
-					+ result.length);
+			/*System.out.println("Search performed, result amount: "
+					+ result.length);*/
 			for (int i = 0; i < result.length; ++i) {
 				storageAgents[i] = result[i].getName();
-				System.out.println(storageAgents[i].getName());
+				/*System.out.println(storageAgents[i].getName());*/
 			}
 		} catch (FIPAException e) {
 			e.printStackTrace();
-			System.out.println("in the catch");
+			/*System.out.println("in the catch");*/
 		}
 	}
 
@@ -114,8 +114,7 @@ public class RobotAgent extends Agent {
 		// uiMap = new Map();
 		updateGuiAgents();// Robot agent wont start without an active GuiAgent
 		if (guiAgents.length == 0) {
-			System.out
-					.println("No gui agent found, robot agent is terminating");
+			/*System.out.println("No gui agent found, robot agent is terminating");*/
 			doDelete();
 		}
 
@@ -125,16 +124,16 @@ public class RobotAgent extends Agent {
 		if (args != null && args.length > 0) {
 			location = new Point(Integer.parseInt((String) args[0]),
 					Integer.parseInt((String) args[1]));
-			System.out.println(getAID().getName() + " is positioned at "
-					+ location.x + "," + location.y);
+			/*System.out.println(getAID().getName() + " is positioned at "
+					+ location.x + "," + location.y);*/
 		} else {
 			// Make the agent terminate
-			System.out.println("No position defined, closing down");
+			/*System.out.println("No position defined, closing down");*/
 			doDelete();
 		}
 
-		System.out.println("Hallo! Robot-agent " + getAID().getName()
-				+ " is ready.");
+//		System.out.println("Hallo! Robot-agent " + getAID().getName()
+//				+ " is ready.");
 
 		// register at yellow pages serivce
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -147,7 +146,7 @@ public class RobotAgent extends Agent {
 			DFService.register(this, dfd);
 
 		} catch (FIPAException e) {
-			System.out.println("catch");
+//			System.out.println("catch");
 			e.printStackTrace();
 		}
 
@@ -174,8 +173,8 @@ public class RobotAgent extends Agent {
 			fe.printStackTrace();
 		}
 		// Printout a dismissal message
-		System.out.println("Robot-agent " + getAID().getName()
-				+ " terminating.");
+//		System.out.println("Robot-agent " + getAID().getName()
+//				+ " terminating.");
 	}
 
 	public Integer calculatePathCost(Point l) {
@@ -187,6 +186,7 @@ public class RobotAgent extends Agent {
 
 		if (uiMap == null)
 			return 1000000000;
+		if(location.x == l.x && location.y == l.y){return 100000;}
 
 		AStar finder = new AStar();
 		Cell[] path = finder.findPath(uiMap, location, l);
@@ -199,9 +199,13 @@ public class RobotAgent extends Agent {
 
 	private class OfferRequestsServer extends CyclicBehaviour {
 		public void action() {// listen to incomming CFP from storageAgents
+			
 			MessageTemplate mt = MessageTemplate
 					.MatchPerformative(ACLMessage.CFP);
 			ACLMessage msg = myAgent.receive(mt);
+			
+			System.out.println("REQUEST RECEIVED");
+			System.out.println(msg);
 			if (msg != null) {// only respond to CFP messages
 				// CFP Message received. Process it
 				String requestedLocation = msg.getContent();
@@ -245,7 +249,18 @@ public class RobotAgent extends Agent {
 			if (msg != null) {// this agent is chosen to pick up the item
 				// ACCEPT_PROPOSAL Message received. Process it
 				String requestedLocation = msg.getContent();
-				Integer itemX = Integer.parseInt(requestedLocation.substring(0,
+				
+				String[] locs = requestedLocation.split(":");
+				
+				String[] locItem = locs[0].split(",");
+				Integer itemX = Integer.parseInt(locItem[0]);
+				Integer itemY = Integer.parseInt(locItem[1]);
+				
+				String[] locStor = locs[1].split(",");
+				Integer storageAgentX = Integer.parseInt(locStor[0]);
+				Integer storageAgentY = Integer.parseInt(locStor[1]);
+				
+				/*Integer itemX = Integer.parseInt(requestedLocation.substring(0,
 						requestedLocation.indexOf(',', 1)));
 				Integer itemY = Integer.parseInt(requestedLocation.substring(
 						requestedLocation.indexOf(',', 1) + 1,
@@ -255,14 +270,15 @@ public class RobotAgent extends Agent {
 								requestedLocation.indexOf(',', 2)));
 				Integer storageAgentY = Integer.parseInt(requestedLocation
 						.substring(requestedLocation.indexOf(',', 2) + 1,
-								requestedLocation.length()));
+								requestedLocation.length()));*/
+				
 				ACLMessage reply = msg.createReply();
 
 				reply.setPerformative(ACLMessage.INFORM);
-				System.out.println(getAID().getName()
+				/*System.out.println(getAID().getName()
 						+ " will pick up the item at " + itemX + "," + itemY
 						+ " and bring it to storage agent: " + (storageAgentX)
-						+ "," + storageAgentY);
+						+ "," + storageAgentY);*/
 				myAgent.send(reply);
 
 				if (holdingItem.x == itemX && holdingItem.y == itemY) {// robot
@@ -327,7 +343,7 @@ public class RobotAgent extends Agent {
 					nextDestination.add(ITEMDROPDOWN);
 					nextDestination.add(ITEMDROPDOWN);
 					nextDestination.add(ITEMDROPDOWN);
-					nextDestination.add(ITEMDROPDOWN);
+					//nextDestination.add(ITEMDROPDOWN);
 				}
 			} else {
 				block();
@@ -344,11 +360,22 @@ public class RobotAgent extends Agent {
 
 		Point nextDest = this.travelPoints.get(0);
 		AStar finder = new AStar();
+		if(location.x == nextDest.x && location.y == nextDest.y){return;}			
 		Cell[] path = finder.findPath(uiMap, location, nextDest);
 		if (path != null) {
-			this.moveMentQueue.add(path[0].getPosition());
-			this.moveMentQueue.add(path[1].getPosition());
-			this.moveMentQueue.add(path[2].getPosition());
+			if(path.length > 1)
+			{
+				this.moveMentQueue.add(path[1].getPosition());
+			}
+			if(path.length > 2)
+			{
+				this.moveMentQueue.add(path[2].getPosition());
+			}
+			if(path.length > 3)
+			{
+				this.moveMentQueue.add(path[3].getPosition());
+			}
+			//this.moveMentQueue.add(path[0].getPosition());
 		}
 
 		// fill moveMentQueue with the 3 found locations
@@ -377,6 +404,12 @@ public class RobotAgent extends Agent {
 			holdingItem.x = 0;
 			holdingItem.y = 0;
 			break;
+		}
+		nextDestination.remove(0);
+		travelPoints.remove(0);
+		if(nextDestination.get(0) == ITEMDROPDOWN)
+		{
+			boolean breaker = true;
 		}
 	}
 
@@ -429,10 +462,14 @@ public class RobotAgent extends Agent {
 				 * MAPMOVEPLACE = '.'; MAPPRODUCTPLACE = 'P'; MAPOUTPUTQUEUE =
 				 * 'o'; MAPINPUTQUEUE = 'I'; MAPWALL = 'X';
 				 */
-				if (str == MAPMOVEPLACE || str == MAPOUTPUTQUEUE
-						|| str == MAPINPUTQUEUE) {
+				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
+						|| str == MAPINPUTQUEUE)*/ {
 					cl.setBlocked(false);
-				} else // is not movable create block
+				}else if(str == MAPPRODUCTPLACE)
+					{
+						cl.setProduct(true);
+					}
+					else // is not movable create block
 				{
 					cl.setBlocked(true);
 				}
@@ -486,7 +523,7 @@ public class RobotAgent extends Agent {
 					conversationString+=moveMentQueue.get(0).y;
 					location = moveMentQueue.get(0);
 					moveMentQueue.remove(0);
-					if (location == travelPoints.get(0)) {
+					if (location.x == travelPoints.get(0).x && location.y == travelPoints.get(0).y) {
 						checkArrival();
 					}
 					ACLMessage mapUpd = new ACLMessage(ACLMessage.INFORM);
@@ -544,6 +581,7 @@ public class RobotAgent extends Agent {
 					awaitingRelease = false;
 				}
 			} else {
+				awaitingRelease = false;
 				block();
 			}
 		}
@@ -560,10 +598,34 @@ public class RobotAgent extends Agent {
 													// agents are aware of the
 													// same map they share among
 													// them
-			movReq.setContent(moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+","+ //;x,y;x,y;x,y;");// last x,y is the agent its
-					moveMentQueue.get(1).x+","+moveMentQueue.get(1).y+","+
-					moveMentQueue.get(2).x+","+moveMentQueue.get(2).y+","+
-					location.x+","+location.y+",");//yes, the last comma is needed
+			//System.out.println(moveMentQueue.size());
+			String hopRq = "";
+			if(moveMentQueue.size() == 0)
+			{
+				hopRq += location.x+","+location.y+",";
+				hopRq += location.x+","+location.y+",";
+				hopRq += location.x+","+location.y+",";
+			}else if(moveMentQueue.size() == 1)
+			{
+				hopRq += moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+",";
+				hopRq += moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+",";
+				hopRq += moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+",";
+				
+			}else if(moveMentQueue.size() == 2)
+			{
+				hopRq += moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+",";
+				hopRq += moveMentQueue.get(1).x+","+moveMentQueue.get(1).y+",";
+				hopRq += moveMentQueue.get(1).x+","+moveMentQueue.get(1).y+",";
+				
+			}else
+			{
+				hopRq += moveMentQueue.get(0).x+","+moveMentQueue.get(0).y+",";
+				hopRq += moveMentQueue.get(1).x+","+moveMentQueue.get(1).y+",";
+				hopRq += moveMentQueue.get(2).x+","+moveMentQueue.get(2).y+",";
+			}
+			hopRq += location.x+","+location.y+",";
+			
+			movReq.setContent(hopRq); //;x,y;x,y;x,y;");// last x,y is the agent its//yes, the last comma is needed
 													// current location, this
 													// needs to be claimed too
 			movReq.setConversationId("hop-request");

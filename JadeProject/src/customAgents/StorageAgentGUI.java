@@ -30,10 +30,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-/**
-  @author Giovanni Caire - TILAB
- */
-class StorageAgentGUI extends JFrame {	
+
+public class StorageAgentGUI extends JFrame {	
 	
 	
 

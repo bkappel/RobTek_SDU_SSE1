@@ -46,8 +46,8 @@ public class PlanningTest {
 						"XXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 		
 		AStar planner = new AStar();
-		Point src = new Point(1,1);
-		Point dest = new Point(4,4);
+		Point src = new Point(12,7);
+		Point dest = new Point(15,2);
 		
 		Cell[] path = planner.findPath(this.createUIGraph(mpStr), src, dest);
 		
@@ -116,7 +116,11 @@ public class PlanningTest {
 				if (str == MAPMOVEPLACE || str == MAPOUTPUTQUEUE
 						|| str == MAPINPUTQUEUE) {
 					cl.setBlocked(false);
-				} else // is not movable create block
+				}else if(str == MAPPRODUCTPLACE)
+					{
+						cl.setProduct(true);
+					}
+					else // is not movable create block
 				{
 					cl.setBlocked(true);
 				}

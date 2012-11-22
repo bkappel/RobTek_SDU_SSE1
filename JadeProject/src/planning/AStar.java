@@ -15,7 +15,7 @@ public class AStar {
 	private Vector done;
 	private Map map;
 	private int stepSpeed = 20;
-	private int maxSteps = 1000;
+	private int maxSteps = 30;
 	
 	private double distFromStart = 0;
 	private boolean findFirst = false; 
