@@ -95,7 +95,7 @@ public class StorageAgent extends Agent {
 		addProduct("Heineken", new Point(9, 11));
 		addProduct("Leffe", new Point(12, 7));
 		addProduct("Hoegaarden", new Point(16, 15));
-		addProduct("Albani", new Point(17, 17));
+		addProduct("Albani", new Point(16, 16));
 
 		// register this agent at the yellow pages service
 		DFAgentDescription dfd = new DFAgentDescription();

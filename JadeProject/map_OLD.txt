@@ -7,7 +7,7 @@ X..PP..PP..PP..ooooooooooo.X
 X..PP..PP..PP..IIIIIIIIIIISX
 X..PP..PP..PP..ooooooooooo.X
 X..PP..PP..PP..IIIIIIIIIIISX
-X..PP..PP..PP..XXXXXXXXXXXXX
+X..PP..PP..PP..............X
 X..PP..PP..PP..............X
 X..PP..PP..PP..PP..PP..PP..X
 X..PP..PP..PP..PP..PP..PP..X
