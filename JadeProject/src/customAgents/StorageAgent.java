@@ -40,9 +40,9 @@ import java.util.List;
 public class StorageAgent extends Agent {
 	public class PathClaimer {
 		public List<Point> claimedPoints = new ArrayList<Point>();
-		public AID ID;
+		public String ID;
 
-		public PathClaimer(AID a) {
+		public PathClaimer(String a) {
 			ID = a;
 		}
 	}
@@ -239,6 +239,7 @@ public class StorageAgent extends Agent {
 			switch (step) {
 			case 0:
 				// Send the cfp to all robots
+				System.out.println("requesting item");
 				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 				for (int i = 0; i < robotAgents.length; ++i) {
 					cfp.addReceiver(robotAgents[i]);
@@ -398,7 +399,7 @@ public class StorageAgent extends Agent {
 					
 					//System.out.println("Agent not Found in AcceptHopRequest Method: " + movReq.getSender());
 					
-					PathClaimer pc = new PathClaimer(movReq.getSender());
+					PathClaimer pc = new PathClaimer(movReq.getSender().toString());
 					//Add all
 					pc.claimedPoints.add(points.get(points.size() - 1));
 					//pc.claimedPoints.addAll(points);
@@ -422,7 +423,7 @@ public class StorageAgent extends Agent {
 											.get(p).y) {
 								hopIsAvailable = false;
 								
-								//System.out.println("Hop is not available for:" + movReq.getSender());
+								System.out.println("Hop is not available for:" + movReq.getSender());
 								//System.out.println("Pathclaimers size: " + PathClaimers.size());
 							}
 						}
@@ -434,7 +435,7 @@ public class StorageAgent extends Agent {
 					//System.out.println("Hop is available");
 					
 					for (int i = 0; i < PathClaimers.size(); i++) {
-						if (PathClaimers.get(i).ID == movReq.getSender()) {// the
+						if (PathClaimers.get(i).ID.equals(movReq.getSender().toString())) {// the
 																			// requesting
 																			// agent
 																			// its
@@ -530,8 +531,8 @@ public class StorageAgent extends Agent {
 													// new values
 					boolean agentInExistance = false;
 					for (int i = 0; i < PathClaimers.size(); i++) {
-						if (PathClaimers.get(i).ID.toString().equals(
-								movReq.getSender().toString())) {
+						if (PathClaimers.get(i).ID.equals(
+								splitString[0])) {
 							
 							//System.out.println("Agent is known, update claimed points");
 							
@@ -545,7 +546,7 @@ public class StorageAgent extends Agent {
 					}
 					if (agentInExistance == false) {
 						//System.out.println("Agent is unknown, create pathclaimer and claimed points");
-						PathClaimer pc = new PathClaimer(movReq.getSender());
+						PathClaimer pc = new PathClaimer(splitString[0]);
 						for (int j = 0; j < points.size(); j++) {
 							pc.claimedPoints.add(points.get(j));
 						}
@@ -557,7 +558,7 @@ public class StorageAgent extends Agent {
 					boolean agentInExistance = false;
 					for (int i = 0; i < PathClaimers.size(); i++) {
 						if (PathClaimers.get(i).ID.toString().equals(
-								movReq.getSender().toString())) {
+								splitString[0])) {
 							agentInExistance = true;
 							PathClaimers.get(i).claimedPoints.clear();
 							PathClaimers.get(i).claimedPoints.add(points
@@ -565,7 +566,7 @@ public class StorageAgent extends Agent {
 						}
 					}
 					if (agentInExistance == false) {
-						PathClaimer pc = new PathClaimer(movReq.getSender());
+						PathClaimer pc = new PathClaimer(splitString[0]);
 						pc.claimedPoints.add(points.get(points.size() - 1));
 						PathClaimers.add(pc);
 					}

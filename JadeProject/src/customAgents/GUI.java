@@ -30,6 +30,16 @@ public class GUI extends JFrame implements ActionListener{
 	public static final char MOVE_ROBOT = 'R';
 	public static final char MOVE_BOX = 'V';
 	public static final char DROP_BOX = 'D';
+	
+	private static final Color WALLCOLOR = Color.BLACK;
+	private static final Color PRODUCTCOLOR = Color.GREEN;
+	private static final Color FREEROBOTCOLOR = Color.RED;
+	private static final Color CARRYROBOTCOLOR = Color.MAGENTA;
+	private static final Color INQUEUECOLOR = Color.LIGHT_GRAY;
+	private static final Color OUTQUEUECOLOR = Color.DARK_GRAY;
+	private static final Color EMPTYSPACECOLOR = Color.GRAY;
+	private static final Color STORAGEAGENTCOLOR = Color.BLUE;
+	
 	//public Color previousColor;
 	//public Point previousLocation;
 	
@@ -178,7 +188,6 @@ public class GUI extends JFrame implements ActionListener{
 		return totalGUI;
 	}
 
-
 	private void createAndShowGUI() {
 
 		JFrame.setDefaultLookAndFeelDecorated(true);
@@ -207,6 +216,35 @@ public class GUI extends JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
+	}
+	
+	@Override
+	public String toString()
+	{
+		String ret = mapWidth + ";" + mapHeight + ";";
+		String mappie ="";
+		for(JPanel pan : map)
+		{
+			if(pan.getBackground() == PRODUCTCOLOR)
+			{
+				mappie += String.valueOf(BOX);
+			}else if(pan.getBackground() == EMPTYSPACECOLOR)
+			{
+				mappie += String.valueOf(EMPTY_SPACE);
+			}else if(pan.getBackground() == INQUEUECOLOR)
+			{
+				mappie += String.valueOf(IN_QUEUE);
+			}else if(pan.getBackground() == OUTQUEUECOLOR)
+			{
+				mappie += String.valueOf(OUT_QUEUE);
+			}else
+			{
+				mappie += String.valueOf(WALL);
+			}
+		}
+		
+		ret+= mappie;
+		return ret;
 	}
 
 }

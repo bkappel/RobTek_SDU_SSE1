@@ -32,6 +32,8 @@ public class RobotAgent extends Agent {
 	final static char MAPINPUTQUEUE = 'I';
 	final static char MAPWALL = 'X';
 
+	public boolean lastClaimRejected = false;
+	
 	public Point location;// current location of robot
 	boolean claimDropdownID;
 	private AID[] storageAgents;// list of active storage agents
@@ -163,6 +165,8 @@ public class RobotAgent extends Agent {
 		addBehaviour(new ArrivalReply());// Behaviour which awaits incomming go
 											// after arriving at a storage agent
 
+		this.calculateNextHopSetup();
+		
 	}
 
 	protected void takeDown() {
@@ -227,6 +231,7 @@ public class RobotAgent extends Agent {
 			System.out.println(msg);*/
 			if (msg != null) {// only respond to CFP messages
 				// CFP Message received. Process it
+				//System.out.println("Got request");
 				String requestedLocation = msg.getContent();
 				ACLMessage reply = msg.createReply();// add the sender as
 														// recipient
@@ -423,6 +428,11 @@ public class RobotAgent extends Agent {
 		}
 	} // End of inner class OfferRequestsServer
 
+	public void calculateNextHopSetup()
+	{
+		addBehaviour(new HopRequest());
+	}
+	
 	public void calculateNextHop() {
 		// look at list of travel points, and the list of occupiedPoints.
 		// calculate next 3 areas and put them in the list movementQueue
@@ -561,6 +571,10 @@ public class RobotAgent extends Agent {
 				uiMap.addCell(cl);
 			}
 		}
+		if(lastClaimRejected)
+		{
+			calculateNextHop();
+		}
 	}
 
 	private class MovementBehaviour extends TickerBehaviour {
@@ -576,6 +590,7 @@ public class RobotAgent extends Agent {
 					if (travelPoints.size() != 0)// if there are actually points
 													// to visit
 					{
+						movementVerified = false;
 						calculateNextHop();
 						try {
 							Thread.sleep(2);
@@ -735,6 +750,7 @@ public class RobotAgent extends Agent {
 			if (msg != null) {// this agent received a YES or NO after his
 								// movement request
 				String response = msg.getContent();
+				System.out.println("Response to my request: " + response);
 				if (response.contains("yes")) {
 					movementVerified = true;
 					for (int j = 0; j < occupiedPoints.size(); j++) {// after a
@@ -752,29 +768,23 @@ public class RobotAgent extends Agent {
 					}
 				} else {
 					// request new map
-					//System.out.println("Cant walk here " + this.myAgent.getAID());
+					System.out.println("Cant walk here " + this.myAgent.getAID());
 					
-					/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+					ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 					mapReq.addReceiver(guiAgents[0]);
 					mapReq.setContent("Give me map");
 					mapReq.setConversationId("map-request");
-					myAgent.send(mapReq);*/
+					myAgent.send(mapReq);
 
+					//boolean lastClaimeRejected = true;
+					lastClaimRejected = true;
+					movementVerified = false;
+					
 					/*
 					 * for(int i = 0;i<moveMentQueue.size();i++) {
 					 * occupiedPoints.add(moveMentQueue.get(i)); }
 					 */
-					for(int i = 0; i < 30; i++)
-					{
-						for(int j = 0; j < 30; j++)
-						{
-							for(int k = 0; k < 30; k++)
-							{
-								boolean sleep = true;
-							}
-						}
-					}
-					calculateNextHop();
+					//calculateNextHop();
 				}
 			} else {
 				block();
@@ -819,7 +829,6 @@ public class RobotAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {// this agent received a map after his map request
 				String response = msg.getContent();
-				// TODO : process the map string to a local stored map
 				createUIGraph(response);
 			} else {
 				block();

@@ -90,7 +90,8 @@ public class GUIAgent extends GuiAgent {
 				//System.out.println("I received a map request");//debug purpose
 				ACLMessage acptMap = movReq.createReply();//the sender is added as recipient
 				acptMap.setPerformative(ACLMessage.INFORM);
-				acptMap.setContent(myGUI.getMapString());
+				//acptMap.setContent(myGUI.getMapString());
+				acptMap.setContent(myGUI.toString());
 				myAgent.send(acptMap);
 			}
 			else {
