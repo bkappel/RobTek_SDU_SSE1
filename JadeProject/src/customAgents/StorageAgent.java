@@ -105,10 +105,11 @@ public class StorageAgent extends Agent {
 		sd.setName("Warehouse-StorageAutomation");
 		dfd.addServices(sd);
 		try {
+			//System.out.println("service description: " + dfd);
 			DFService.register(this, dfd);
 
 		} catch (FIPAException e) {
-			/*System.out.println("catch");*/
+			//System.out.println("hier gaat het mis?");
 			e.printStackTrace();
 		}
 
@@ -133,7 +134,10 @@ public class StorageAgent extends Agent {
 
 	protected void takeDown() {
 		// Close the GUI
-		myGui.dispose();
+		if(myGui != null)
+		{
+			myGui.dispose();
+		}
 		// Deregister from the yellow pages
 		try {
 			DFService.deregister(this);
@@ -271,8 +275,8 @@ public class StorageAgent extends Agent {
 					repliesCnt++;
 					if (repliesCnt >= robotAgents.length) {
 						// We received all replies
-						System.out.println("bestprice: " +  bestPrice);
-						System.out.println("cheapest bot: " + cheapestRobot.getName());
+						//System.out.println("bestprice: " +  bestPrice);
+						//System.out.println("cheapest bot: " + cheapestRobot.getName());
 						step = 2;
 						/*System.out.println("Received all replies");*/
 					}
@@ -355,7 +359,7 @@ public class StorageAgent extends Agent {
 				
 				
 				for (int i = 0; i < pointsInHop - 1; i++) {
-					/*System.out.println("reqeuestedlocs: " + requestedLocations);*/
+					//System.out.println("reqeuestedlocs: " + requestedLocations + " by: " + movReq.getSender());
 					String[] splits = requestedLocations.split(",");
 					Point p = new Point();
 					/*
@@ -387,9 +391,13 @@ public class StorageAgent extends Agent {
 						PathClaimers.get(i).claimedPoints.add(points.get(points
 								.size() - 1));
 						//System.out.println("claimedPoints size: " + PathClaimers.get(i).claimedPoints.size());
+						//System.out.println("Agent Found" + movReq.getSender());
 					}
 				}
 				if (agentInExistance == false) {
+					
+					//System.out.println("Agent not Found in AcceptHopRequest Method: " + movReq.getSender());
+					
 					PathClaimer pc = new PathClaimer(movReq.getSender());
 					//Add all
 					pc.claimedPoints.add(points.get(points.size() - 1));
@@ -413,6 +421,9 @@ public class StorageAgent extends Agent {
 									&& PathClaimers.get(i).claimedPoints.get(j).y == points
 											.get(p).y) {
 								hopIsAvailable = false;
+								
+								//System.out.println("Hop is not available for:" + movReq.getSender());
+								//System.out.println("Pathclaimers size: " + PathClaimers.size());
 							}
 						}
 					}
@@ -420,6 +431,8 @@ public class StorageAgent extends Agent {
 
 				if (hopIsAvailable) {// claim the hop
 										// System.out.println(PathClaimers.size());
+					//System.out.println("Hop is available");
+					
 					for (int i = 0; i < PathClaimers.size(); i++) {
 						if (PathClaimers.get(i).ID == movReq.getSender()) {// the
 																			// requesting
@@ -495,6 +508,10 @@ public class StorageAgent extends Agent {
 									// of a robot agent
 				String receiveString = movReq.getContent();// looks like:
 															// "sender.getAid.getName(),yes,x,y,x,y,x,y,x,y"
+				/*System.out.println("-------- Map update ---------");
+				System.out.println(receiveString);
+				System.out.println("-----------------------------");*/
+				
 				String[] splitString = receiveString.split(",");
 				int pointsInHop = (splitString.length - 2) / 2;
 				List<Point> points = new ArrayList<Point>();
@@ -513,7 +530,11 @@ public class StorageAgent extends Agent {
 													// new values
 					boolean agentInExistance = false;
 					for (int i = 0; i < PathClaimers.size(); i++) {
-						if (PathClaimers.get(i).ID == movReq.getSender()) {
+						if (PathClaimers.get(i).ID.toString().equals(
+								movReq.getSender().toString())) {
+							
+							//System.out.println("Agent is known, update claimed points");
+							
 							agentInExistance = true;
 							PathClaimers.get(i).claimedPoints.clear();
 							for (int j = 0; j < points.size(); j++) {
@@ -523,17 +544,20 @@ public class StorageAgent extends Agent {
 						}
 					}
 					if (agentInExistance == false) {
+						//System.out.println("Agent is unknown, create pathclaimer and claimed points");
 						PathClaimer pc = new PathClaimer(movReq.getSender());
 						for (int j = 0; j < points.size(); j++) {
 							pc.claimedPoints.add(points.get(j));
 						}
+						PathClaimers.add(pc);
 					}
 				} else {// the agent is arrived at his location but didnt get
 						// approval to move on, his previous claimed spots can
 						// be freed now
 					boolean agentInExistance = false;
 					for (int i = 0; i < PathClaimers.size(); i++) {
-						if (PathClaimers.get(i).ID == movReq.getSender()) {
+						if (PathClaimers.get(i).ID.toString().equals(
+								movReq.getSender().toString())) {
 							agentInExistance = true;
 							PathClaimers.get(i).claimedPoints.clear();
 							PathClaimers.get(i).claimedPoints.add(points
@@ -543,6 +567,7 @@ public class StorageAgent extends Agent {
 					if (agentInExistance == false) {
 						PathClaimer pc = new PathClaimer(movReq.getSender());
 						pc.claimedPoints.add(points.get(points.size() - 1));
+						PathClaimers.add(pc);
 					}
 				}
 			} else {
@@ -558,6 +583,11 @@ public class StorageAgent extends Agent {
 			if (arr != null) 
 			{
 				String receivedString = arr.getContent();
+				
+				/*System.out.println("-------- Message ---------");
+				System.out.println(receivedString);
+				System.out.println("-----------------------------");*/
+				
 				if(receivedString.contains((location.x-1)+","+location.y))
 				{//the robot is near this storage agent
 					

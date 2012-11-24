@@ -1,12 +1,15 @@
 package customAgents;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -14,6 +17,11 @@ import javax.swing.SwingUtilities;
 
 public class GUI extends JFrame implements ActionListener{
 
+	public class guiClaimer
+	{
+		public int previousPoint;
+		public Color previousColor;
+	}
 	public static final char WALL = 'X';
 	public static final char BOX = 'P';
 	public static final char OUT_QUEUE = 'o';
@@ -22,9 +30,11 @@ public class GUI extends JFrame implements ActionListener{
 	public static final char MOVE_ROBOT = 'R';
 	public static final char MOVE_BOX = 'V';
 	public static final char DROP_BOX = 'D';
-
-
-	//private GUI gui;
+	//public Color previousColor;
+	//public Point previousLocation;
+	
+	public List<guiClaimer> guiClaimers = new ArrayList<guiClaimer>();
+	
 	private int mapWidth;
 	private int mapHeight;
 	private int squareSize = 25;
@@ -39,19 +49,41 @@ public class GUI extends JFrame implements ActionListener{
 	}
 	public void makeMove(char who, int fromX, int fromY, int toX, int toY) {
 
+		System.out.println("Move is made from: " +fromX+";"+fromY+ " to "+ toX+";"+toY);
+		
 		int fromIndex = fromY * mapWidth + fromX;
 		int toIndex = toY * mapWidth + toX;
-
+		guiClaimer currentClaimer = null;
+		for(int i = 0 ; i <guiClaimers.size();i++)
+		{
+			if(guiClaimers.get(i).previousPoint==fromIndex)
+			{
+				currentClaimer=guiClaimers.get(i);
+			}
+		}
+		if(currentClaimer==null)
+		{//initialization of a robot agent
+			currentClaimer = new guiClaimer();
+			currentClaimer.previousColor=Color.gray;
+			currentClaimer.previousPoint=toIndex;
+			guiClaimers.add(currentClaimer);
+		}
+		
 		Color fromColor = Color.PINK;
 		Color toColor = Color.PINK;
+		
 		switch (who) {
 		case MOVE_ROBOT:
 			toColor = Color.RED;
-			fromColor = Color.GRAY;
+			fromColor = currentClaimer.previousColor;
 			break;
 		case MOVE_BOX:
 			toColor = Color.MAGENTA;
-			fromColor = Color.GRAY;
+			if(currentClaimer.previousColor==Color.GREEN || currentClaimer.previousColor==Color.MAGENTA)
+			{
+				fromColor=Color.GRAY;
+			}
+			else fromColor = currentClaimer.previousColor;
 			break;
 		case DROP_BOX:
 			toColor = Color.RED;
@@ -60,6 +92,14 @@ public class GUI extends JFrame implements ActionListener{
 		default:
 			break;
 		}
+		
+		if(!(map[toIndex].getBackground()==Color.red ||map[toIndex].getBackground()==Color.MAGENTA))
+		{
+			currentClaimer.previousColor=map[toIndex].getBackground();
+		} 
+		
+		currentClaimer.previousPoint=toIndex;
+		
 		if (fromIndex != toIndex) {
 			map[fromIndex].setBackground(fromColor);
 			map[toIndex].setBackground(toColor);

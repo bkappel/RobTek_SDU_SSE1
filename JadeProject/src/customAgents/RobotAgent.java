@@ -300,7 +300,17 @@ public class RobotAgent extends Agent {
 						+ "," + storageAgentY);*/
 				myAgent.send(reply);
 
-				if (holdingItem.x == itemX && holdingItem.y == itemY) {// robot
+				boolean isAlreadyGoingThere=false;
+				for(int i = 0 ; i < travelPoints.size(); i++)
+				{
+					if(travelPoints.get(i).x==itemX && travelPoints.get(i).y==itemY)
+					{
+						isAlreadyGoingThere=true;
+					}
+					
+				}
+				
+				if ((holdingItem.x == itemX && holdingItem.y == itemY)){// robot
 																		// is
 																		// carrying
 																		// the
@@ -345,7 +355,50 @@ public class RobotAgent extends Agent {
 						nextDestination.add(7, ITEMDROPDOWN);
 						nextDestination.add(8, ITEMDROPDOWN);
 					}
-				} else {
+					else if (nextDestination.get(0) == ITEMPICKUP) {
+						//at some unknown time, the robot agent has already planned to pick up the item
+						travelPoints.remove(4);
+						nextDestination.remove(4);
+						travelPoints.add(4, new Point(storageAgentX - 11,
+								storageAgentY));
+						travelPoints.add(5, new Point(storageAgentX - 1,
+								storageAgentY));
+						travelPoints.add(6, new Point(storageAgentX - 1,
+								storageAgentY - 1));
+						travelPoints.add(7, new Point(storageAgentX - 11,
+								storageAgentY - 1));
+						travelPoints.add(8, new Point(itemX, itemY));
+						nextDestination.add(4, STORAGEAGENT);
+						nextDestination.add(5, STORAGEAGENT);
+						nextDestination.add(6, ITEMDROPDOWN);
+						nextDestination.add(7, ITEMDROPDOWN);
+						nextDestination.add(8, ITEMDROPDOWN);
+					}
+				}
+				else if (isAlreadyGoingThere)
+				{
+					boolean isInsert=false;
+					for(int i = 0 ; i <travelPoints.size();i++)
+					{
+						if(isInsert==false)
+						{
+							if(travelPoints.get(i).x==itemX && travelPoints.get(i).y==itemY)
+							{
+								isInsert=true;
+								travelPoints.add(i+5,new Point(storageAgentX-11,storageAgentY));
+								nextDestination.add(i+5, STORAGEAGENT);
+								travelPoints.add(i+6,new Point(storageAgentX-1,storageAgentY));
+								nextDestination.add(i+6, STORAGEAGENT);
+								travelPoints.add(i+7,new Point(storageAgentX-1,storageAgentY-1));
+								nextDestination.add(i+7, ITEMDROPDOWN);
+								travelPoints.add(i+8,new Point(storageAgentX-11,storageAgentY-1));
+								nextDestination.add(i+8, ITEMDROPDOWN); 
+							}
+						}
+					}
+				
+				}
+				else {
 					travelPoints.add(new Point(itemX, itemY));
 					travelPoints.add(new Point(storageAgentX - 11,
 							storageAgentY));
@@ -545,7 +598,7 @@ public class RobotAgent extends Agent {
 						claimDropdownID = false;
 					}
 					if (nextDestination.get(0) == ITEMDROPDOWN
-							&& moveMentQueue.get(0) == travelPoints.get(0)) {
+							&& moveMentQueue.get(0).x == holdingItem.x && moveMentQueue.get(0).y == holdingItem.y) {
 						claimDropdownID = true;
 					}
 					conversationString+=(statusID + ",");
@@ -657,6 +710,8 @@ public class RobotAgent extends Agent {
 			}
 			hopRq += location.x+","+location.y+",";
 			
+			System.out.println("Hi, I " + this.myAgent.getAID() + " want these locs: " + hopRq);
+			
 			movReq.setContent(hopRq); //;x,y;x,y;x,y;");// last x,y is the agent its//yes, the last comma is needed
 													// current location, this
 													// needs to be claimed too
@@ -697,16 +752,28 @@ public class RobotAgent extends Agent {
 					}
 				} else {
 					// request new map
-					ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+					//System.out.println("Cant walk here " + this.myAgent.getAID());
+					
+					/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 					mapReq.addReceiver(guiAgents[0]);
 					mapReq.setContent("Give me map");
 					mapReq.setConversationId("map-request");
-					myAgent.send(mapReq);
+					myAgent.send(mapReq);*/
 
 					/*
 					 * for(int i = 0;i<moveMentQueue.size();i++) {
 					 * occupiedPoints.add(moveMentQueue.get(i)); }
 					 */
+					for(int i = 0; i < 30; i++)
+					{
+						for(int j = 0; j < 30; j++)
+						{
+							for(int k = 0; k < 30; k++)
+							{
+								boolean sleep = true;
+							}
+						}
+					}
 					calculateNextHop();
 				}
 			} else {
