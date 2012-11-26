@@ -359,7 +359,7 @@ public class StorageAgent extends Agent {
 				List<Point> points = new ArrayList<Point>();
 				
 				
-				for (int i = 0; i < pointsInHop - 1; i++) {
+				/*for (int i = 0; i < pointsInHop - 1; i++) {
 					//System.out.println("reqeuestedlocs: " + requestedLocations + " by: " + movReq.getSender());
 					String[] splits = requestedLocations.split(",");
 					Point p = new Point();
@@ -371,11 +371,19 @@ public class StorageAgent extends Agent {
 					 * .charAt(i*4+2)));
 					 */
 
-					p.x = Integer.parseInt(splits[i]);
-					p.y = Integer.parseInt(splits[i + 1]);
+					/*p.x = Integer.parseInt(splits[i]);
+					p.y = Integer.parseInt(splits[i+1]);
 
 					points.add(p);
-				}
+				}*/
+				
+				// as we know for a fact that the robot can only allocate three spots at the time
+				// we can hard code the gathering of the three spots
+				
+				String splits[] = requestedLocations.split(",");
+				points.add(new Point(Integer.parseInt(splits[0]), Integer.parseInt(splits[1])));
+				points.add(new Point(Integer.parseInt(splits[2]), Integer.parseInt(splits[3])));
+				points.add(new Point(Integer.parseInt(splits[4]), Integer.parseInt(splits[5])));
 
 				// first remove the previous claimed path, if there is one,
 				// although do keep the current position claimed, else just

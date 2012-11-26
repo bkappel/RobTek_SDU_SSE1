@@ -199,17 +199,33 @@ public class RobotAgent extends Agent {
 			
 			System.out.println("robot: " + this.getName() + " holdingitem: " + holdingItem.toString());
 			
-			if (holdingItem.x != 0 && holdingItem.y != 0)
+			if (holdingItem.x != 0 && holdingItem.y != 0 ||
+					nextDestination.size() > 0)
 			{
 				System.out.println("I'm holding an item: " + this.getName());
 				if(travelPoints.size() > 0)
 				{
-				totalLength += finder.findPath(uiMap, location, travelPoints.get(0)).length;
+					Cell[] pth =finder.findPath(uiMap, location, travelPoints.get(0));
+					if(pth != null)
+					{
+						totalLength += pth.length;
+					}else
+					{
+						totalLength += 100;
+					}
 				for(int i =0; i < travelPoints.size()-1; i++)
 				{
 					Point srcDest = this.travelPoints.get(i);
 					Point nxtDest = this.travelPoints.get(i+1);
-					totalLength += finder.findPath(uiMap, srcDest, nxtDest).length;
+					Cell[] npth =finder.findPath(uiMap, srcDest, nxtDest);
+					if(npth != null)
+					{
+						totalLength += npth.length;
+					}else
+					{
+						totalLength += 100;
+					}
+					//totalLength += finder.findPath(uiMap, srcDest, nxtDest).length;
 				}
 				}
 			}
@@ -390,6 +406,7 @@ public class RobotAgent extends Agent {
 							if(travelPoints.get(i).x==itemX && travelPoints.get(i).y==itemY)
 							{
 								isInsert=true;
+								//travelPoints.remove(4);
 								travelPoints.add(i+5,new Point(storageAgentX-11,storageAgentY));
 								nextDestination.add(i+5, STORAGEAGENT);
 								travelPoints.add(i+6,new Point(storageAgentX-1,storageAgentY));
@@ -445,6 +462,7 @@ public class RobotAgent extends Agent {
 		if(location.x == nextDest.x && location.y == nextDest.y)
 		{
 			this.moveMentQueue.add(location);
+			movementVerified = true;
 			return;
 		}else
 		{
@@ -463,6 +481,21 @@ public class RobotAgent extends Agent {
 				this.moveMentQueue.add(path[3].getPosition());
 			}
 			//this.moveMentQueue.add(path[0].getPosition());
+		}else
+		{
+			/*if(!lastClaimRejected)
+			{
+			this.moveMentQueue.clear();
+			this.moveMentQueue.add(location);
+			}*/
+			uiMap = null;
+			ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+			mapReq.addReceiver(guiAgents[0]);
+			mapReq.setContent("Give me map");
+			mapReq.setConversationId("map-request");
+			this.send(mapReq);
+			lastClaimRejected = true;
+			return;
 		}
 		}
 
@@ -477,6 +510,7 @@ public class RobotAgent extends Agent {
 						// here
 			holdingItem.x = location.x;
 			holdingItem.y = location.y;
+			System.out.println("I'm at the item place: "+ this.getAID());
 			break;
 
 		case STORAGEAGENT:// the real fysical robot would have to deliver the
@@ -498,6 +532,7 @@ public class RobotAgent extends Agent {
 		}
 		nextDestination.remove(0);
 		travelPoints.remove(0);
+		//moveMentQueue.clear();
 		/*if(nextDestination.get(0) == ITEMDROPDOWN)
 		{
 			boolean breaker = true;
@@ -571,8 +606,10 @@ public class RobotAgent extends Agent {
 				uiMap.addCell(cl);
 			}
 		}
-		if(lastClaimRejected)
+		if(lastClaimRejected)// && !movementVerified)
 		{
+			System.out.println("Calculating new hop after last one was declined");
+			//lastClaimRejected = false;
 			calculateNextHop();
 		}
 	}
@@ -725,7 +762,7 @@ public class RobotAgent extends Agent {
 			}
 			hopRq += location.x+","+location.y+",";
 			
-			System.out.println("Hi, I " + this.myAgent.getAID() + " want these locs: " + hopRq);
+			//System.out.println("Hi, I " + this.myAgent.getAID() + " want these locs: " + hopRq);
 			
 			movReq.setContent(hopRq); //;x,y;x,y;x,y;");// last x,y is the agent its//yes, the last comma is needed
 													// current location, this
@@ -750,9 +787,21 @@ public class RobotAgent extends Agent {
 			if (msg != null) {// this agent received a YES or NO after his
 								// movement request
 				String response = msg.getContent();
-				System.out.println("Response to my request: " + response);
+				//System.out.println("Response to my request: " + response);
 				if (response.contains("yes")) {
+					
 					movementVerified = true;
+					lastClaimRejected = false;
+					if(lastClaimRejected)
+					{
+						uiMap = null;
+						ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+						mapReq.addReceiver(guiAgents[0]);
+						mapReq.setContent("Give me map");
+						mapReq.setConversationId("map-request");
+						myAgent.send(mapReq);
+					}else
+					{
 					for (int j = 0; j < occupiedPoints.size(); j++) {// after a
 																		// hop
 																		// request
@@ -766,10 +815,13 @@ public class RobotAgent extends Agent {
 																		// points
 						occupiedPoints.remove(0);
 					}
+					
+					}
 				} else {
 					// request new map
 					System.out.println("Cant walk here " + this.myAgent.getAID());
 					
+					uiMap = null;
 					ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 					mapReq.addReceiver(guiAgents[0]);
 					mapReq.setContent("Give me map");
@@ -779,6 +831,7 @@ public class RobotAgent extends Agent {
 					//boolean lastClaimeRejected = true;
 					lastClaimRejected = true;
 					movementVerified = false;
+					//moveMentQueue.clear();
 					
 					/*
 					 * for(int i = 0;i<moveMentQueue.size();i++) {

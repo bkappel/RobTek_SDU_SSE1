@@ -5,7 +5,7 @@ import java.awt.Point;
 public class Cell {
 	
 	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, 
-			PRODUCT = 50, QUEUE = 1.3,CLAIMED = 5;
+			PRODUCT = Double.MAX_VALUE, QUEUE = 1.3,CLAIMED = 5;
 	private double cost = 1.0;
 	private Point position;
 	
