@@ -428,7 +428,7 @@ public class StorageAgent extends Agent {
 							if (PathClaimers.get(i).claimedPoints.get(j).x == points
 									.get(p).x
 									&& PathClaimers.get(i).claimedPoints.get(j).y == points
-											.get(p).y) {
+											.get(p).y && !(PathClaimers.get(i).ID.equals(movReq.getSender().toString()))) {
 								hopIsAvailable = false;
 								
 								System.out.println("Hop is not available for:" + movReq.getSender());

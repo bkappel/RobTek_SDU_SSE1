@@ -33,6 +33,7 @@ public class RobotAgent extends Agent {
 	final static char MAPWALL = 'X';
 
 	public boolean lastClaimRejected = false;
+	public boolean mapUpdatedAfterSuccesfullRequest = false;
 	
 	public Point location;// current location of robot
 	boolean claimDropdownID;
@@ -608,6 +609,10 @@ public class RobotAgent extends Agent {
 		}
 		if(lastClaimRejected)// && !movementVerified)
 		{
+			if(mapUpdatedAfterSuccesfullRequest)
+			{
+				lastClaimRejected = false;
+			}
 			System.out.println("Calculating new hop after last one was declined");
 			//lastClaimRejected = false;
 			calculateNextHop();
@@ -789,9 +794,6 @@ public class RobotAgent extends Agent {
 				String response = msg.getContent();
 				//System.out.println("Response to my request: " + response);
 				if (response.contains("yes")) {
-					
-					movementVerified = true;
-					lastClaimRejected = false;
 					if(lastClaimRejected)
 					{
 						uiMap = null;
@@ -800,9 +802,13 @@ public class RobotAgent extends Agent {
 						mapReq.setContent("Give me map");
 						mapReq.setConversationId("map-request");
 						myAgent.send(mapReq);
+						movementVerified = true;
+						//lastClaimRejected = false;
+						mapUpdatedAfterSuccesfullRequest = true;
+						
 					}else
 					{
-					for (int j = 0; j < occupiedPoints.size(); j++) {// after a
+					/*for (int j = 0; j < occupiedPoints.size(); j++) {// after a
 																		// hop
 																		// request
 																		// is
@@ -814,8 +820,10 @@ public class RobotAgent extends Agent {
 																		// occupied
 																		// points
 						occupiedPoints.remove(0);
-					}
-					
+						
+					}*/
+					movementVerified = true;
+					lastClaimRejected = false;
 					}
 				} else {
 					// request new map
