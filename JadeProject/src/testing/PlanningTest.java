@@ -127,33 +127,23 @@ public class PlanningTest {
 				 * MAPMOVEPLACE = '.'; MAPPRODUCTPLACE = 'P'; MAPOUTPUTQUEUE =
 				 * 'o'; MAPINPUTQUEUE = 'I'; MAPWALL = 'X';
 				 */
-				/*if (str == MAPMOVEPLACE || str == MAPOUTPUTQUEUE
-						|| str == MAPINPUTQUEUE) {
+				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
+						|| str == MAPINPUTQUEUE)*/ {
 					cl.setBlocked(false);
-				}else if(str == MAPPRODUCTPLACE)
+				}else if(str == MAPINPUTQUEUE)
+					{
+						cl.setInputQueue(true);
+					}else if(str == MAPOUTPUTQUEUE)
+						{
+							cl.setOutputQueue(true);
+						}else if(str == MAPPRODUCTPLACE)
 					{
 						cl.setProduct(true);
 					}
 					else // is not movable create block
 				{
 					cl.setBlocked(true);
-				}*/
-				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
-				|| str == MAPINPUTQUEUE)*/ {
-			cl.setBlocked(false);
-		}else if(str == MAPOUTPUTQUEUE
-				|| str == MAPINPUTQUEUE)
-			{
-				cl.setBlocked(false);
-				cl.setQueue(true);
-			}else if(str == MAPPRODUCTPLACE)
-			{
-				cl.setProduct(true);
-			}
-			else // is not movable create block
-		{
-			cl.setBlocked(true);
-		}
+				}
 				uiMap.addCell(cl);
 			}
 		}

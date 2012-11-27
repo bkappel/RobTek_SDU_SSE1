@@ -34,6 +34,7 @@ public class RobotAgent extends Agent {
 
 	public boolean lastClaimRejected = false;
 	public boolean mapUpdatedAfterSuccesfullRequest = false;
+	public boolean wantsCleanMap = false;
 	
 	public Point location;// current location of robot
 	boolean claimDropdownID;
@@ -157,7 +158,7 @@ public class RobotAgent extends Agent {
 		addBehaviour(new AcceptRequestServer());// accept an incomming request
 		addBehaviour(new MapReceiver());// awaits a map message from guiAgent
 		addBehaviour(new MapRequest());// one shot behaviour to load the map
-		addBehaviour(new MovementBehaviour(this, 500));// every second the
+		addBehaviour(new MovementBehaviour(this, 1000));// every second the
 														// robot is allowed to
 														// move a spot
 		addBehaviour(new HopReply());// Behaviour which awaits incomming
@@ -458,6 +459,7 @@ public class RobotAgent extends Agent {
 		if (this.travelPoints.size() == 0)
 			return;
 
+		this.moveMentQueue.clear();
 		Point nextDest = this.travelPoints.get(0);
 		AStar finder = new AStar();
 		if(location.x == nextDest.x && location.y == nextDest.y)
@@ -490,12 +492,13 @@ public class RobotAgent extends Agent {
 			this.moveMentQueue.add(location);
 			}*/
 			uiMap = null;
-			ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+			/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 			mapReq.addReceiver(guiAgents[0]);
 			mapReq.setContent("Give me map");
 			mapReq.setConversationId("map-request");
-			this.send(mapReq);
+			this.send(mapReq);*/
 			lastClaimRejected = true;
+			addBehaviour(new MapUpdateRequest());
 			return;
 		}
 		}
@@ -511,12 +514,16 @@ public class RobotAgent extends Agent {
 						// here
 			holdingItem.x = location.x;
 			holdingItem.y = location.y;
-			System.out.println("I'm at the item place: "+ this.getAID());
+			//System.out.println("I'm at the item place: "+ this.getAID());
+			wantsCleanMap = true;
+			addBehaviour(new MapUpdateRequest());
 			break;
 
 		case STORAGEAGENT:// the real fysical robot would have to deliver the
 							// item here
 			awaitingRelease = true;
+			wantsCleanMap = true;
+			addBehaviour(new MapUpdateRequest());
 			addBehaviour(new ArrivedAtStorage());// one shot behaviour to notice
 													// all storage agents this
 													// agent is at one of them
@@ -529,6 +536,8 @@ public class RobotAgent extends Agent {
 				holdingItem.x = 0;
 				holdingItem.y = 0;
 			}
+			wantsCleanMap = true;
+			addBehaviour(new MapUpdateRequest());
 			break;
 		}
 		nextDestination.remove(0);
@@ -592,11 +601,13 @@ public class RobotAgent extends Agent {
 				if (str == MAPMOVEPLACE)/* || str == MAPOUTPUTQUEUE
 						|| str == MAPINPUTQUEUE)*/ {
 					cl.setBlocked(false);
-				}else if(str == MAPOUTPUTQUEUE
-						|| str == MAPINPUTQUEUE)
+				}else if(str == MAPINPUTQUEUE)
 					{
-						cl.setQueue(true);
-					}else if(str == MAPPRODUCTPLACE)
+						cl.setInputQueue(true);
+					}else if(str == MAPOUTPUTQUEUE)
+						{
+							cl.setOutputQueue(true);
+						}else if(str == MAPPRODUCTPLACE)
 					{
 						cl.setProduct(true);
 					}
@@ -701,6 +712,7 @@ public class RobotAgent extends Agent {
 					+ holdingItem.x + "," + holdingItem.y);
 			arrMsg.setConversationId("arrival-inform");
 			myAgent.send(arrMsg);
+			
 			done();
 		}
 
@@ -768,6 +780,7 @@ public class RobotAgent extends Agent {
 			hopRq += location.x+","+location.y+",";
 			
 			//System.out.println("Hi, I " + this.myAgent.getAID() + " want these locs: " + hopRq);
+			System.out.println("Hi, I want these locs: " + hopRq);
 			
 			movReq.setContent(hopRq); //;x,y;x,y;x,y;");// last x,y is the agent its//yes, the last comma is needed
 													// current location, this
@@ -792,16 +805,17 @@ public class RobotAgent extends Agent {
 			if (msg != null) {// this agent received a YES or NO after his
 								// movement request
 				String response = msg.getContent();
-				//System.out.println("Response to my request: " + response);
+				System.out.println("Response to my request: " + response);
 				if (response.contains("yes")) {
 					if(lastClaimRejected)
 					{
 						uiMap = null;
-						ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+						/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 						mapReq.addReceiver(guiAgents[0]);
 						mapReq.setContent("Give me map");
 						mapReq.setConversationId("map-request");
-						myAgent.send(mapReq);
+						myAgent.send(mapReq);*/
+						addBehaviour(new MapUpdateRequest());
 						movementVerified = true;
 						//lastClaimRejected = false;
 						mapUpdatedAfterSuccesfullRequest = true;
@@ -830,11 +844,12 @@ public class RobotAgent extends Agent {
 					System.out.println("Cant walk here " + this.myAgent.getAID());
 					
 					uiMap = null;
-					ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+					/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
 					mapReq.addReceiver(guiAgents[0]);
 					mapReq.setContent("Give me map");
 					mapReq.setConversationId("map-request");
-					myAgent.send(mapReq);
+					myAgent.send(mapReq);*/
+					addBehaviour(new MapUpdateRequest());
 
 					//boolean lastClaimeRejected = true;
 					lastClaimRejected = true;
@@ -881,6 +896,34 @@ public class RobotAgent extends Agent {
 			return true;
 		}
 	}
+	
+	public class MapUpdateRequest extends Behaviour {
+			
+		public void action() {// request the map from the GuiAgent
+			//updateGuiAgents();
+			// System.out.println("I did a one shot map request");//debugging
+			// purpose
+			ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
+
+			mapReq.addReceiver(guiAgents[0]);
+			if(wantsCleanMap)
+			{
+				mapReq.setContent("Give me map, clean");
+			}else
+			{
+				mapReq.setContent("Give me map");
+			}
+			mapReq.setConversationId("map-request");
+			myAgent.send(mapReq);
+
+			done();
+		}
+
+		@Override
+		public boolean done() {
+			return true;
+		}
+	}
 
 	private class MapReceiver extends CyclicBehaviour {
 		public void action() {
@@ -890,6 +933,7 @@ public class RobotAgent extends Agent {
 			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null) {// this agent received a map after his map request
 				String response = msg.getContent();
+				wantsCleanMap = false;
 				createUIGraph(response);
 			} else {
 				block();

@@ -88,10 +88,19 @@ public class GUIAgent extends GuiAgent {
 			ACLMessage movReq = myAgent.receive(mt);
 			if (movReq != null) {//Only listen to QUERY_IF messages with ID "map-request", these could be sent either by storage or robot agents
 				//System.out.println("I received a map request");//debug purpose
+				String reqContent = movReq.getContent();
+				
 				ACLMessage acptMap = movReq.createReply();//the sender is added as recipient
 				acptMap.setPerformative(ACLMessage.INFORM);
-				//acptMap.setContent(myGUI.getMapString());
-				acptMap.setContent(myGUI.toString());
+				//
+				if(reqContent.contains("clean"))
+				{
+					acptMap.setContent(myGUI.getMapString());
+				}else
+				{
+					acptMap.setContent(myGUI.toString());
+				}
+				//acptMap.setContent(myGUI.toString());
 				myAgent.send(acptMap);
 			}
 			else {

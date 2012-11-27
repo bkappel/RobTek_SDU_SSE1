@@ -5,7 +5,7 @@ import java.awt.Point;
 public class Cell {
 	
 	public static final double NORMAL = 1, BLOCKED = Double.MAX_VALUE, 
-			PRODUCT = Double.MAX_VALUE, QUEUE = 1.3,CLAIMED = 5;
+			PRODUCT = Double.MAX_VALUE, INPUTQUEUE = 1.3, OUTPUTQUEUE = 1.35;
 	private double cost = 1.0;
 	private Point position;
 	
@@ -96,9 +96,15 @@ public class Cell {
 		return cost== PRODUCT;
 	}
 	
-	public void setQueue(boolean flag)
+	public void setInputQueue(boolean flag)
 	{
-		if(flag)cost = QUEUE;
+		if(flag)cost = INPUTQUEUE;
+		else cost = NORMAL;
+	}
+	
+	public void setOutputQueue(boolean flag)
+	{
+		if(flag)cost = OUTPUTQUEUE;
 		else cost = NORMAL;
 	}
 	

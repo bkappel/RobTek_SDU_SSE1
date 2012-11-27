@@ -424,17 +424,26 @@ public class StorageAgent extends Agent {
 							.size() - 1; j++)// size-1 is already
 												// claimed(current position)
 					{
-						for (int p = 0; p < points.size() -1; p++) {
+						for(int p =0; p < points.size(); p++)
+						{
+							if(PathClaimers.get(i).claimedPoints.contains(points.get(p)))
+									//&& !(PathClaimers.get(i).ID.toString().equals(movReq.getSender().toString())))
+							{
+								hopIsAvailable = false;
+							}
+						}
+						
+						/*for (int p = 0; p < points.size() -1; p++) {
 							if (PathClaimers.get(i).claimedPoints.get(j).x == points
 									.get(p).x
 									&& PathClaimers.get(i).claimedPoints.get(j).y == points
-											.get(p).y && !(PathClaimers.get(i).ID.equals(movReq.getSender().toString()))) {
+											.get(p).y){// && !(PathClaimers.get(i).ID.equals(movReq.getSender().toString()))) {
 								hopIsAvailable = false;
 								
 								System.out.println("Hop is not available for:" + movReq.getSender());
 								//System.out.println("Pathclaimers size: " + PathClaimers.size());
 							}
-						}
+						}*/
 					}
 				}
 
