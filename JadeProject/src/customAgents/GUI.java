@@ -59,7 +59,7 @@ public class GUI extends JFrame implements ActionListener{
 	}
 	public void makeMove(char who, int fromX, int fromY, int toX, int toY) {
 
-		System.out.println("Move is made from: " +fromX+";"+fromY+ " to "+ toX+";"+toY);
+		//System.out.println("Move is made from: " +fromX+";"+fromY+ " to "+ toX+";"+toY);
 		
 		int fromIndex = fromY * mapWidth + fromX;
 		int toIndex = toY * mapWidth + toX;

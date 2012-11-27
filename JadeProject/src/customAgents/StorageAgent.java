@@ -92,11 +92,18 @@ public class StorageAgent extends Agent {
 		// TODO : think of different products and fill our warehouse, see our
 		// warehouse map file
 		addProduct("Jupiler", new Point(4, 4));
-		addProduct("Heineken", new Point(9, 11));
+		addProduct("Duvel", new Point(3, 14));
+		addProduct("Karmeliet", new Point(8, 3));
+		addProduct("Amstel", new Point(11, 7));
+		addProduct("Duvel", new Point(7, 14));
+		addProduct("Heineken", new Point(8, 11));
 		addProduct("Leffe", new Point(12, 7));
-		addProduct("Hoegaarden", new Point(16, 15));
+		addProduct("Hoegaarden", new Point(15, 15));
 		addProduct("Albani", new Point(16, 16));
-
+		addProduct("Carlsberg", new Point(19, 9));
+		addProduct("Becks", new Point(20, 11));
+		addProduct("Weizener", new Point(23, 13));
+		addProduct("Orval", new Point(24, 15));
 		// register this agent at the yellow pages service
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -239,7 +246,7 @@ public class StorageAgent extends Agent {
 			switch (step) {
 			case 0:
 				// Send the cfp to all robots
-				System.out.println("requesting item");
+				//System.out.println("requesting item");
 				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 				for (int i = 0; i < robotAgents.length; ++i) {
 					cfp.addReceiver(robotAgents[i]);
@@ -600,34 +607,36 @@ public class StorageAgent extends Agent {
 			ACLMessage arr = myAgent.receive(mt);
 			if (arr != null) 
 			{
+				//System.out.println("Received arrival reply");
 				String receivedString = arr.getContent();
 				
 				/*System.out.println("-------- Message ---------");
 				System.out.println(receivedString);
 				System.out.println("-----------------------------");*/
-				
+				//System.out.println(receivedString);
 				if(receivedString.contains((location.x-1)+","+location.y))
 				{//the robot is near this storage agent
-					
+					//System.out.println("string contained my location");
 					String[] locs = receivedString.split(";");
 					
 					String[] locItem = locs[0].split(",");
-					Integer itemX = Integer.parseInt(locItem[0]);
-					Integer itemY = Integer.parseInt(locItem[1]);
+					Integer itemX = Integer.parseInt(locItem[2]);
+					Integer itemY = Integer.parseInt(locItem[3]);
 					
 					
 					/*Integer itemX = Integer.parseInt(receivedString.substring(receivedString.indexOf(':', 1)+1,
 							receivedString.indexOf(',', receivedString.indexOf(':', 1))));
 					
 					Integer itemY = Integer.parseInt(receivedString.substring(receivedString.indexOf(',', receivedString.indexOf(':', 1)+1),receivedString.length()-1));*/
-					/*for(Product p: products)
+					
+					for(Product p: products)
 					{
-						if(p.location==new Point(itemX,itemY))
+						if(p.location.x==itemX && p.location.y==itemY)
 						{
-							System.out.println("I received the product: "+p.name);
+							System.out.println(getAID() + " received the product: "+p.name);
 							
 						}
-					}*/
+					}
 					ACLMessage repl = arr.createReply();//the robotAgent sender is added as recipient
 					repl.setContent("go");
 					myAgent.send(repl);

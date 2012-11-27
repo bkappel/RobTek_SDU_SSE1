@@ -158,7 +158,7 @@ public class RobotAgent extends Agent {
 		addBehaviour(new AcceptRequestServer());// accept an incomming request
 		addBehaviour(new MapReceiver());// awaits a map message from guiAgent
 		addBehaviour(new MapRequest());// one shot behaviour to load the map
-		addBehaviour(new MovementBehaviour(this, 1000));// every second the
+		addBehaviour(new MovementBehaviour(this, 500));// every second the
 														// robot is allowed to
 														// move a spot
 		addBehaviour(new HopReply());// Behaviour which awaits incomming
@@ -199,12 +199,12 @@ public class RobotAgent extends Agent {
 		if (path != null) {
 			int totalLength = path.length;
 			
-			System.out.println("robot: " + this.getName() + " holdingitem: " + holdingItem.toString());
+			//System.out.println("robot: " + this.getName() + " holdingitem: " + holdingItem.toString());
 			
 			if (holdingItem.x != 0 && holdingItem.y != 0 ||
 					nextDestination.size() > 0)
 			{
-				System.out.println("I'm holding an item: " + this.getName());
+				//System.out.println("I'm holding an item: " + this.getName());
 				if(travelPoints.size() > 0)
 				{
 					Cell[] pth =finder.findPath(uiMap, location, travelPoints.get(0));
@@ -231,7 +231,7 @@ public class RobotAgent extends Agent {
 				}
 				}
 			}
-			System.out.println("This is the total length: " + totalLength + " me: " + this.getName());
+			//System.out.println("This is the total length: " + totalLength + " me: " + this.getName());
 			return totalLength;
 		}
 
@@ -361,6 +361,7 @@ public class RobotAgent extends Agent {
 						nextDestination.add(4, ITEMDROPDOWN);
 
 					} else if (nextDestination.get(0) == STORAGEAGENT) {
+						System.out.print(travelPoints.size());
 						travelPoints.remove(4);
 						nextDestination.remove(4);
 						travelPoints.add(4, new Point(storageAgentX - 11,
@@ -456,6 +457,10 @@ public class RobotAgent extends Agent {
 		// look at list of travel points, and the list of occupiedPoints.
 		// calculate next 3 areas and put them in the list movementQueue
 
+		if(this.uiMap == null)
+			return;
+		if(this.uiMap.getCells() == null)
+			return;
 		if (this.travelPoints.size() == 0)
 			return;
 
@@ -624,7 +629,7 @@ public class RobotAgent extends Agent {
 			{
 				lastClaimRejected = false;
 			}
-			System.out.println("Calculating new hop after last one was declined");
+			//System.out.println("Calculating new hop after last one was declined");
 			//lastClaimRejected = false;
 			calculateNextHop();
 		}
@@ -701,6 +706,7 @@ public class RobotAgent extends Agent {
 								// agent knows it s own coords so it can be
 								// verified where the agent is
 			updateStorageAgents();
+			//System.out.println("Sent arrival message");
 			ACLMessage arrMsg = new ACLMessage(ACLMessage.INFORM);
 			updateStorageAgents();
 
@@ -708,7 +714,7 @@ public class RobotAgent extends Agent {
 				arrMsg.addReceiver(storageAgents[i]);
 			}
 
-			arrMsg.setContent(location.x + "," + location.y + ";"
+			arrMsg.setContent(location.x + "," + location.y + ","
 					+ holdingItem.x + "," + holdingItem.y);
 			arrMsg.setConversationId("arrival-inform");
 			myAgent.send(arrMsg);
@@ -724,6 +730,7 @@ public class RobotAgent extends Agent {
 
 	private class ArrivalReply extends CyclicBehaviour {
 		public void action() {
+			
 			MessageTemplate mt = MessageTemplate.and(
 					MessageTemplate.MatchPerformative(ACLMessage.INFORM),
 					MessageTemplate.MatchConversationId("arrival-inform"));
@@ -780,7 +787,7 @@ public class RobotAgent extends Agent {
 			hopRq += location.x+","+location.y+",";
 			
 			//System.out.println("Hi, I " + this.myAgent.getAID() + " want these locs: " + hopRq);
-			System.out.println("Hi, I want these locs: " + hopRq);
+			//System.out.println("Hi, I want these locs: " + hopRq);
 			
 			movReq.setContent(hopRq); //;x,y;x,y;x,y;");// last x,y is the agent its//yes, the last comma is needed
 													// current location, this
@@ -805,7 +812,7 @@ public class RobotAgent extends Agent {
 			if (msg != null) {// this agent received a YES or NO after his
 								// movement request
 				String response = msg.getContent();
-				System.out.println("Response to my request: " + response);
+				//System.out.println("Response to my request: " + response);
 				if (response.contains("yes")) {
 					if(lastClaimRejected)
 					{
@@ -841,7 +848,7 @@ public class RobotAgent extends Agent {
 					}
 				} else {
 					// request new map
-					System.out.println("Cant walk here " + this.myAgent.getAID());
+					//System.out.println("Cant walk here " + this.myAgent.getAID());
 					
 					uiMap = null;
 					/*ACLMessage mapReq = new ACLMessage(ACLMessage.QUERY_IF);
